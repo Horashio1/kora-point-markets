@@ -19,6 +19,7 @@ export const questions: Question[] = [
     yes_percentage: 34,
     total_votes: 12450,
     ends_at: "2027-10-01",
+    thumbnail_url: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=100&h=100&fit=crop",
     is_featured: true,
   },
   {
@@ -30,6 +31,7 @@ export const questions: Question[] = [
     yes_percentage: 42,
     total_votes: 89320,
     ends_at: "2025-12-31",
+    thumbnail_url: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=100&h=100&fit=crop",
     is_featured: true,
   },
   {
@@ -41,6 +43,7 @@ export const questions: Question[] = [
     yes_percentage: 67,
     total_votes: 45230,
     ends_at: "2025-04-01",
+    thumbnail_url: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=100&h=100&fit=crop",
   },
   {
     id: "4",
@@ -51,6 +54,7 @@ export const questions: Question[] = [
     yes_percentage: 23,
     total_votes: 34560,
     ends_at: "2025-12-31",
+    thumbnail_url: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=100&h=100&fit=crop",
   },
   {
     id: "5",
@@ -61,6 +65,7 @@ export const questions: Question[] = [
     yes_percentage: 56,
     total_votes: 18900,
     ends_at: "2025-06-30",
+    thumbnail_url: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=100&h=100&fit=crop",
   },
   {
     id: "6",
@@ -71,6 +76,7 @@ export const questions: Question[] = [
     yes_percentage: 71,
     total_votes: 67800,
     ends_at: "2026-03-01",
+    thumbnail_url: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=100&h=100&fit=crop",
   },
   {
     id: "7",
@@ -81,6 +87,7 @@ export const questions: Question[] = [
     yes_percentage: 15,
     total_votes: 156000,
     ends_at: "2026-01-01",
+    thumbnail_url: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=100&h=100&fit=crop",
   },
   {
     id: "8",
@@ -91,6 +98,7 @@ export const questions: Question[] = [
     yes_percentage: 28,
     total_votes: 23400,
     ends_at: "2025-05-31",
+    thumbnail_url: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=100&h=100&fit=crop",
   },
 ];
 
