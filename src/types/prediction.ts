@@ -14,6 +14,7 @@ export interface Question {
   yes_percentage: number;
   total_votes: number;
   ends_at: string;
+  thumbnail_url: string;
   image_url?: string;
   is_featured?: boolean;
 }
