@@ -14,7 +14,157 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          icon: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          ends_at: string
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          thumbnail_url: string | null
+          title: string
+          total_votes: number
+          updated_at: string
+          yes_percentage: number
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          thumbnail_url?: string | null
+          title: string
+          total_votes?: number
+          updated_at?: string
+          yes_percentage?: number
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          thumbnail_url?: string | null
+          title?: string
+          total_votes?: number
+          updated_at?: string
+          yes_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_stats: {
+        Row: {
+          created_at: string
+          daily_allowance: number
+          id: string
+          last_reset_date: string
+          losses: number
+          points_spent_today: number
+          total_points: number
+          updated_at: string
+          user_id: string
+          wins: number
+        }
+        Insert: {
+          created_at?: string
+          daily_allowance?: number
+          id?: string
+          last_reset_date?: string
+          losses?: number
+          points_spent_today?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+          wins?: number
+        }
+        Update: {
+          created_at?: string
+          daily_allowance?: number
+          id?: string
+          last_reset_date?: string
+          losses?: number
+          points_spent_today?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+          wins?: number
+        }
+        Relationships: []
+      }
+      user_votes: {
+        Row: {
+          created_at: string
+          id: string
+          points_wagered: number
+          prediction: string
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points_wagered?: number
+          prediction: string
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points_wagered?: number
+          prediction?: string
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_votes_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
