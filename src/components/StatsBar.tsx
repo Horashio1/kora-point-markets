@@ -1,9 +1,12 @@
-import { userStats } from "@/data/mockData";
+import { useUserStats } from "@/hooks/useUserStats";
 import { Coins, Target, Trophy, TrendingDown } from "lucide-react";
 
 export function StatsBar() {
+  const { data: userStats } = useUserStats();
+  
   const pointsRemaining = userStats.daily_allowance - userStats.points_spent_today;
-  const winRate = Math.round((userStats.wins / (userStats.wins + userStats.losses)) * 100);
+  const totalGames = userStats.wins + userStats.losses;
+  const winRate = totalGames > 0 ? Math.round((userStats.wins / totalGames) * 100) : 0;
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
