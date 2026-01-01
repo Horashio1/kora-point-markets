@@ -5,9 +5,9 @@ import { PredictionCard } from "@/components/PredictionCard";
 import { FeaturedPrediction } from "@/components/FeaturedPrediction";
 import { BettingModal } from "@/components/BettingModal";
 import { StatsBar } from "@/components/StatsBar";
-import { questions } from "@/data/mockData";
+import { useQuestions, useFeaturedQuestion } from "@/hooks/useQuestions";
 import { Question } from "@/types/prediction";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Loader2 } from "lucide-react";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -15,7 +15,8 @@ const Index = () => {
   const [selectedPrediction, setSelectedPrediction] = useState<'yes' | 'no' | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const featuredQuestion = questions.find((q) => q.is_featured);
+  const { data: questions = [], isLoading: questionsLoading } = useQuestions();
+  const { data: featuredQuestion } = useFeaturedQuestion();
   
   const filteredQuestions = questions.filter((q) => {
     if (selectedCategory === null) return true;
@@ -85,20 +86,29 @@ const Index = () => {
             />
           </div>
 
-          {/* Questions Grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredQuestions.map((question, index) => (
-              <div
-                key={question.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <PredictionCard question={question} onBet={handleBet} />
-              </div>
-            ))}
-          </div>
+          {/* Loading State */}
+          {questionsLoading && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
 
-          {filteredQuestions.length === 0 && (
+          {/* Questions Grid */}
+          {!questionsLoading && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredQuestions.map((question, index) => (
+                <div
+                  key={question.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <PredictionCard question={question} onBet={handleBet} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!questionsLoading && filteredQuestions.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-muted-foreground">No markets found in this category</p>
             </div>

@@ -1,4 +1,4 @@
-import { categories } from "@/data/mockData";
+import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 
 interface CategoryFilterProps {
@@ -7,6 +7,8 @@ interface CategoryFilterProps {
 }
 
 export function CategoryFilter({ selectedCategory, onSelectCategory }: CategoryFilterProps) {
+  const { data: categories = [] } = useCategories();
+
   return (
     <div className="flex flex-wrap gap-2">
       <button

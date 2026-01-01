@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Question } from "@/types/prediction";
 import { Button } from "@/components/ui/button";
-import { userStats } from "@/data/mockData";
+import { useUserStats } from "@/hooks/useUserStats";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,8 @@ interface BettingModalProps {
 
 export function BettingModal({ question, prediction, isOpen, onClose }: BettingModalProps) {
   const [points, setPoints] = useState(10);
+  const { data: userStats } = useUserStats();
+  
   const pointsRemaining = userStats.daily_allowance - userStats.points_spent_today;
   const maxBet = Math.min(pointsRemaining, 100);
 
