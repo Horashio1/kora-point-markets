@@ -1,25 +1,36 @@
 import { Button } from "@/components/ui/button";
-import { Coins, TrendingUp, Menu } from "lucide-react";
-import { userStats } from "@/data/mockData";
+import { Coins, TrendingUp, Menu, LogOut } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserStats } from "@/hooks/useUserStats";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pointsRemaining = userStats.daily_allowance - userStats.points_spent_today;
+  const { user, signOut } = useAuth();
+  const { data: userStats } = useUserStats();
+
+  const pointsRemaining = userStats 
+    ? userStats.daily_allowance - userStats.points_spent_today 
+    : 0;
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
               <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             <span className="font-display text-xl font-bold">
               Kora<span className="text-primary">.lk</span>
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
@@ -36,19 +47,32 @@ export function Header() {
 
           {/* Points & Actions */}
           <div className="flex items-center gap-3">
-            <div className="glass-card hidden items-center gap-2 px-4 py-2 sm:flex">
-              <Coins className="h-4 w-4 text-primary" />
-              <span className="font-display font-semibold text-foreground">
-                {userStats.total_points.toLocaleString()}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                ({pointsRemaining} left today)
-              </span>
-            </div>
+            {user && userStats && (
+              <div className="glass-card hidden items-center gap-2 px-4 py-2 sm:flex">
+                <Coins className="h-4 w-4 text-primary" />
+                <span className="font-display font-semibold text-foreground">
+                  {userStats.total_points.toLocaleString()}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  ({pointsRemaining} left today)
+                </span>
+              </div>
+            )}
             
-            <Button variant="glow" size="sm" className="hidden sm:flex">
-              Sign In
-            </Button>
+            {user ? (
+              <div className="hidden items-center gap-2 sm:flex">
+                <span className="text-sm text-muted-foreground">
+                  {user.email?.split("@")[0]}
+                </span>
+                <Button variant="ghost" size="icon" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button variant="glow" size="sm" className="hidden sm:flex" asChild>
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            )}
 
             <Button
               variant="ghost"
@@ -68,11 +92,22 @@ export function Header() {
               <a href="#" className="text-sm font-medium text-foreground">Markets</a>
               <a href="#" className="text-sm font-medium text-muted-foreground">Leaderboard</a>
               <a href="#" className="text-sm font-medium text-muted-foreground">How It Works</a>
-              <div className="flex items-center gap-2 pt-2">
-                <Coins className="h-4 w-4 text-primary" />
-                <span className="font-display font-semibold">{userStats.total_points.toLocaleString()} points</span>
-              </div>
-              <Button variant="glow" size="sm" className="w-fit">Sign In</Button>
+              {user && userStats && (
+                <div className="flex items-center gap-2 pt-2">
+                  <Coins className="h-4 w-4 text-primary" />
+                  <span className="font-display font-semibold">{userStats.total_points.toLocaleString()} points</span>
+                </div>
+              )}
+              {user ? (
+                <Button variant="ghost" size="sm" className="w-fit gap-2" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              ) : (
+                <Button variant="glow" size="sm" className="w-fit" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+              )}
             </nav>
           </div>
         )}
