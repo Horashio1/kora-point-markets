@@ -19,32 +19,32 @@ export type Database = {
           color: string
           created_at: string
           icon: string
-          id: string
+          id: number
           name: string
         }
         Insert: {
           color: string
           created_at?: string
           icon: string
-          id?: string
+          id?: number
           name: string
         }
         Update: {
           color?: string
           created_at?: string
           icon?: string
-          id?: string
+          id?: number
           name?: string
         }
         Relationships: []
       }
       questions: {
         Row: {
-          category_id: string | null
+          category_id: number | null
           created_at: string
           description: string | null
           ends_at: string
-          id: string
+          id: number
           image_url: string | null
           is_featured: boolean | null
           thumbnail_url: string | null
@@ -54,11 +54,11 @@ export type Database = {
           yes_percentage: number
         }
         Insert: {
-          category_id?: string | null
+          category_id?: number | null
           created_at?: string
           description?: string | null
           ends_at: string
-          id?: string
+          id?: number
           image_url?: string | null
           is_featured?: boolean | null
           thumbnail_url?: string | null
@@ -68,11 +68,11 @@ export type Database = {
           yes_percentage?: number
         }
         Update: {
-          category_id?: string | null
+          category_id?: number | null
           created_at?: string
           description?: string | null
           ends_at?: string
-          id?: string
+          id?: number
           image_url?: string | null
           is_featured?: boolean | null
           thumbnail_url?: string | null
@@ -136,7 +136,7 @@ export type Database = {
           id: string
           points_wagered: number
           prediction: string
-          question_id: string
+          question_id: number
           user_id: string
         }
         Insert: {
@@ -144,7 +144,7 @@ export type Database = {
           id?: string
           points_wagered?: number
           prediction: string
-          question_id: string
+          question_id: number
           user_id: string
         }
         Update: {
@@ -152,7 +152,7 @@ export type Database = {
           id?: string
           points_wagered?: number
           prediction?: string
-          question_id?: string
+          question_id?: number
           user_id?: string
         }
         Relationships: [

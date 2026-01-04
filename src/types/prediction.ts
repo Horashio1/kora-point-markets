@@ -1,15 +1,15 @@
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   icon: string;
   color: string;
 }
 
 export interface Question {
-  id: string;
+  id: number;
   title: string;
   description: string;
-  category_id: string;
+  category_id: number;
   category: Category;
   yes_percentage: number;
   total_votes: number;
@@ -22,7 +22,7 @@ export interface Question {
 export interface UserVote {
   id: string;
   user_id: string;
-  question_id: string;
+  question_id: number;
   prediction: 'yes' | 'no';
   points_wagered: number;
   created_at: string;
