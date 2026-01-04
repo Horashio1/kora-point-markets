@@ -10,7 +10,7 @@ import { Question } from "@/types/prediction";
 import { TrendingUp, Loader2 } from "lucide-react";
 
 const Index = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [selectedPrediction, setSelectedPrediction] = useState<'yes' | 'no' | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

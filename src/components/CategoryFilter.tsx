@@ -2,8 +2,8 @@ import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 
 interface CategoryFilterProps {
-  selectedCategory: string | null;
-  onSelectCategory: (categoryId: string | null) => void;
+  selectedCategory: number | null;
+  onSelectCategory: (categoryId: number | null) => void;
 }
 
 export function CategoryFilter({ selectedCategory, onSelectCategory }: CategoryFilterProps) {
