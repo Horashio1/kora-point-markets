@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Coins, TrendingUp, Menu, LogOut } from "lucide-react";
+import { Coins, TrendingUp, Menu, LogOut, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserStats } from "@/hooks/useUserStats";
+import { CreateQuestionModal } from "@/components/CreateQuestionModal";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { data: userStats } = useUserStats();
 
@@ -47,6 +49,18 @@ export function Header() {
 
           {/* Points & Actions */}
           <div className="flex items-center gap-3">
+            {user && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden gap-1.5 sm:flex"
+                onClick={() => setCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Create
+              </Button>
+            )}
+            
             {user && userStats && (
               <div className="glass-card hidden items-center gap-2 px-4 py-2 sm:flex">
                 <Coins className="h-4 w-4 text-primary" />
@@ -99,10 +113,24 @@ export function Header() {
                 </div>
               )}
               {user ? (
-                <Button variant="ghost" size="sm" className="w-fit gap-2" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-fit gap-1.5" 
+                    onClick={() => {
+                      setCreateModalOpen(true);
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Prediction
+                  </Button>
+                  <Button variant="ghost" size="sm" className="w-fit gap-2" onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </>
               ) : (
                 <Button variant="glow" size="sm" className="w-fit" asChild>
                   <Link to="/auth">Sign In</Link>
@@ -112,6 +140,12 @@ export function Header() {
           </div>
         )}
       </div>
+
+      {/* Create Prediction Modal */}
+      <CreateQuestionModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+      />
     </header>
   );
 }

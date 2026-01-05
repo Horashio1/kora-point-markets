@@ -51,6 +51,7 @@ export type Database = {
           title: string
           total_votes: number
           updated_at: string
+          user_id: string | null
           yes_percentage: number
         }
         Insert: {
@@ -65,6 +66,7 @@ export type Database = {
           title: string
           total_votes?: number
           updated_at?: string
+          user_id?: string | null
           yes_percentage?: number
         }
         Update: {
@@ -79,6 +81,7 @@ export type Database = {
           title?: string
           total_votes?: number
           updated_at?: string
+          user_id?: string | null
           yes_percentage?: number
         }
         Relationships: [
