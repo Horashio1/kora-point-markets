@@ -47,6 +47,8 @@ export type Database = {
           id: number
           image_url: string | null
           is_featured: boolean | null
+          options: Json | null
+          question_type: string
           thumbnail_url: string | null
           title: string
           total_votes: number
@@ -62,6 +64,8 @@ export type Database = {
           id?: number
           image_url?: string | null
           is_featured?: boolean | null
+          options?: Json | null
+          question_type?: string
           thumbnail_url?: string | null
           title: string
           total_votes?: number
@@ -77,6 +81,8 @@ export type Database = {
           id?: number
           image_url?: string | null
           is_featured?: boolean | null
+          options?: Json | null
+          question_type?: string
           thumbnail_url?: string | null
           title?: string
           total_votes?: number
