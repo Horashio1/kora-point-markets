@@ -1,63 +1,115 @@
 import { Question, QuestionOption } from "@/types/prediction";
 import { Button } from "@/components/ui/button";
-import { Clock, Plus } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Plus } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface PredictionCardProps {
   question: Question;
   onBet: (question: Question, prediction: 'yes' | 'no', optionName?: string) => void;
 }
 
+function useCountdown(endDate: string) {
+  const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft(endDate));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft(endDate));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endDate]);
+
+  return timeLeft;
+}
+
+function calculateTimeLeft(endDate: string) {
+  const difference = new Date(endDate).getTime() - new Date().getTime();
+  
+  if (difference <= 0) {
+    return { hours: 0, minutes: 0, seconds: 0, expired: true };
+  }
+
+  const hours = Math.floor(difference / (1000 * 60 * 60));
+  const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+  return { hours, minutes, seconds, expired: false };
+}
+
+function formatCountdown(time: { hours: number; minutes: number; seconds: number; expired: boolean }) {
+  if (time.expired) return "Ended";
+  return `${time.hours}h ${time.minutes}m ${time.seconds}s`;
+}
+
+function calculateWinnings(percentage: number): number {
+  // If you bet $100 on an outcome with X% probability, potential winnings = 100 / (percentage/100)
+  if (percentage <= 0) return 0;
+  return Math.round((100 / percentage) * 100);
+}
+
 export function PredictionCard({ question, onBet }: PredictionCardProps) {
   const noPercentage = 100 - question.yes_percentage;
-  const endsIn = formatDistanceToNow(new Date(question.ends_at), { addSuffix: true });
+  const timeLeft = useCountdown(question.ends_at);
   const isBinary = question.question_type === 'binary';
 
+  const yesWinnings = calculateWinnings(question.yes_percentage);
+  const noWinnings = calculateWinnings(noPercentage);
+
   return (
-    <div className="glass-card-hover group flex flex-col p-5">
+    <div className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 hover:shadow-md transition-shadow">
       {/* Header with Thumbnail and Title */}
       <div className="mb-4 flex gap-4">
         <img
           src={question.thumbnail_url}
           alt={question.title}
-          className="h-14 w-14 rounded-xl object-cover ring-2 ring-border/50"
+          className="h-14 w-14 rounded-xl object-cover"
         />
-        <div className="flex flex-1 flex-col">
-          <h3 className="font-display text-base font-semibold leading-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
+        <div className="flex flex-1 flex-col justify-center">
+          <h3 className="font-medium text-sm leading-tight text-foreground line-clamp-2">
             {question.title}
           </h3>
-          {isBinary && (
-            <div className="mt-1 flex items-center gap-2">
-              <span className="text-xl font-bold text-foreground">{question.yes_percentage}%</span>
-            </div>
-          )}
         </div>
+        {isBinary && (
+          <span className="text-2xl font-bold text-foreground self-center">
+            {question.yes_percentage}%
+          </span>
+        )}
       </div>
 
       {/* Betting Options */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {isBinary ? (
           /* Binary Yes/No layout */
-          <div className="flex gap-2">
-            <Button
-              variant="yes"
-              size="sm"
-              className="flex-1 h-9"
-              onClick={() => onBet(question, 'yes')}
-            >
-              Yes
-            </Button>
-            <Button
-              variant="no"
-              size="sm"
-              className="flex-1 h-9"
-              onClick={() => onBet(question, 'no')}
-            >
-              No
-            </Button>
+          <div className="flex gap-3">
+            <div className="flex-1 flex flex-col">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-10 bg-success/10 border-success/20 text-success hover:bg-success/20 hover:text-success font-medium"
+                onClick={() => onBet(question, 'yes')}
+              >
+                Yes
+              </Button>
+              <span className="text-xs text-muted-foreground mt-1 text-center">
+                $100 → <span className="text-success font-medium">${yesWinnings}</span>
+              </span>
+            </div>
+            <div className="flex-1 flex flex-col">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-10 bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive font-medium"
+                onClick={() => onBet(question, 'no')}
+              >
+                No
+              </Button>
+              <span className="text-xs text-muted-foreground mt-1 text-center">
+                $100 → <span className="text-destructive font-medium">${noWinnings}</span>
+              </span>
+            </div>
           </div>
         ) : (
-          /* Multi-choice layout - show options with Yes/No for each */
+          /* Multi-choice layout */
           <div className="space-y-2">
             {question.options?.slice(0, 3).map((option) => (
               <MultiOptionRow
@@ -76,16 +128,17 @@ export function PredictionCard({ question, onBet }: PredictionCardProps) {
         )}
       </div>
 
-      {/* Footer with stats and time */}
-      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-        <span className="font-medium">
-          ${question.total_votes.toLocaleString()}
-        </span>
+      {/* Footer with stats and countdown */}
+      <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Clock className="h-3 w-3" />
-          <span>{endsIn}</span>
+          <span className="font-medium">${question.total_votes.toLocaleString()}</span>
+          <span>·</span>
+          <span>Daily</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-destructive font-medium">{formatCountdown(timeLeft)}</span>
           <button className="p-1 hover:bg-secondary rounded-full transition-colors">
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
@@ -101,24 +154,22 @@ interface MultiOptionRowProps {
 
 function MultiOptionRow({ option, onYes, onNo }: MultiOptionRowProps) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <span className="text-sm text-foreground truncate">{option.name}</span>
-        <span className="text-sm font-semibold text-foreground">{option.percentage}%</span>
-      </div>
-      <div className="flex gap-1">
+    <div className="flex items-center justify-between gap-3 py-1">
+      <span className="text-sm text-foreground flex-1 min-w-0 truncate">{option.name}</span>
+      <span className="text-sm font-semibold text-foreground w-12 text-right">{option.percentage}%</span>
+      <div className="flex gap-1.5">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="h-6 px-2 text-xs text-success border-success/30 hover:bg-success/10 hover:text-success"
+          className="h-7 px-3 text-xs text-success hover:bg-success/10 hover:text-success"
           onClick={onYes}
         >
           Yes
         </Button>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="h-6 px-2 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+          className="h-7 px-3 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={onNo}
         >
           No
