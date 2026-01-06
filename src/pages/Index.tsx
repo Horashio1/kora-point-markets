@@ -5,16 +5,22 @@ import { PredictionCard } from "@/components/PredictionCard";
 import { FeaturedPrediction } from "@/components/FeaturedPrediction";
 import { BettingModal } from "@/components/BettingModal";
 import { StatsBar } from "@/components/StatsBar";
+import { CreateQuestionModal } from "@/components/CreateQuestionModal";
 import { useQuestions, useFeaturedQuestion } from "@/hooks/useQuestions";
+import { useAuth } from "@/hooks/useAuth";
 import { Question } from "@/types/prediction";
-import { TrendingUp, Loader2 } from "lucide-react";
+import { TrendingUp, Loader2, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [selectedPrediction, setSelectedPrediction] = useState<'yes' | 'no' | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const { user } = useAuth();
   const { data: questions = [], isLoading: questionsLoading } = useQuestions();
   const { data: featuredQuestion } = useFeaturedQuestion();
   
@@ -48,10 +54,27 @@ const Index = () => {
               Predict the Future,{" "}
               <span className="gradient-text">Win Big</span>
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground mb-6">
               Bet on politics, sports, crypto & more using your daily point allowance. 
               Make predictions. Beat the crowd. Climb the leaderboard.
             </p>
+
+            {/* Prominent Create Button */}
+            {user ? (
+              <Button 
+                variant="glow" 
+                size="lg" 
+                className="gap-2 text-base"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-5 w-5" />
+                Create a Prediction
+              </Button>
+            ) : (
+              <Button variant="glow" size="lg" className="gap-2 text-base" asChild>
+                <Link to="/auth">Sign In to Create Predictions</Link>
+              </Button>
+            )}
           </div>
 
           {/* Stats Bar */}
@@ -143,6 +166,12 @@ const Index = () => {
           setSelectedQuestion(null);
           setSelectedPrediction(null);
         }}
+      />
+
+      {/* Create Question Modal */}
+      <CreateQuestionModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
   );

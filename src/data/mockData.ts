@@ -21,6 +21,7 @@ export const questions: Question[] = [
     ends_at: "2027-10-01",
     thumbnail_url: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=100&h=100&fit=crop",
     is_featured: true,
+    question_type: 'binary',
   },
   {
     id: 2,
@@ -33,17 +34,25 @@ export const questions: Question[] = [
     ends_at: "2025-12-31",
     thumbnail_url: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=100&h=100&fit=crop",
     is_featured: true,
+    question_type: 'binary',
   },
   {
     id: 3,
-    title: "New government formed before April 2025?",
-    description: "Will Sri Lanka form a new government before April 1st, 2025?",
-    category_id: 1,
-    category: categories[0],
-    yes_percentage: 67,
-    total_votes: 45230,
+    title: "What will be the top AI model this month?",
+    description: "Which AI model will be considered the best performer?",
+    category_id: 5,
+    category: categories[4],
+    yes_percentage: 50,
+    total_votes: 329181,
     ends_at: "2025-04-01",
-    thumbnail_url: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=100&h=100&fit=crop",
+    thumbnail_url: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=100&h=100&fit=crop",
+    question_type: 'multi',
+    options: [
+      { name: "gemini-3-pro", percentage: 88 },
+      { name: "gpt-5.2", percentage: 2 },
+      { name: "claude-4", percentage: 7 },
+      { name: "llama-5", percentage: 3 },
+    ],
   },
   {
     id: 4,
@@ -55,6 +64,7 @@ export const questions: Question[] = [
     total_votes: 34560,
     ends_at: "2025-12-31",
     thumbnail_url: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=100&h=100&fit=crop",
+    question_type: 'binary',
   },
   {
     id: 5,
@@ -66,6 +76,7 @@ export const questions: Question[] = [
     total_votes: 18900,
     ends_at: "2025-06-30",
     thumbnail_url: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=100&h=100&fit=crop",
+    question_type: 'binary',
   },
   {
     id: 6,
@@ -77,6 +88,7 @@ export const questions: Question[] = [
     total_votes: 67800,
     ends_at: "2026-03-01",
     thumbnail_url: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=100&h=100&fit=crop",
+    question_type: 'binary',
   },
   {
     id: 7,
@@ -88,6 +100,7 @@ export const questions: Question[] = [
     total_votes: 156000,
     ends_at: "2026-01-01",
     thumbnail_url: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=100&h=100&fit=crop",
+    question_type: 'binary',
   },
   {
     id: 8,
@@ -99,6 +112,7 @@ export const questions: Question[] = [
     total_votes: 23400,
     ends_at: "2025-05-31",
     thumbnail_url: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=100&h=100&fit=crop",
+    question_type: 'binary',
   },
 ];
 

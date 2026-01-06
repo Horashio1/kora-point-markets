@@ -5,6 +5,11 @@ export interface Category {
   color: string;
 }
 
+export interface QuestionOption {
+  name: string;
+  percentage: number;
+}
+
 export interface Question {
   id: number;
   title: string;
@@ -17,6 +22,8 @@ export interface Question {
   thumbnail_url: string;
   image_url?: string;
   is_featured?: boolean;
+  question_type: 'binary' | 'multi';
+  options?: QuestionOption[];
 }
 
 export interface UserVote {

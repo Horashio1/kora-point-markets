@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Question, Category } from "@/types/prediction";
+import { Question, Category, QuestionOption } from "@/types/prediction";
 
 export function useQuestions() {
   return useQuery({
@@ -28,6 +28,8 @@ export function useQuestions() {
         thumbnail_url: q.thumbnail_url || "",
         image_url: q.image_url || undefined,
         is_featured: q.is_featured || false,
+        question_type: (q.question_type as 'binary' | 'multi') || 'binary',
+        options: (q.options as unknown as QuestionOption[]) || undefined,
       }));
     },
   });
@@ -62,6 +64,8 @@ export function useFeaturedQuestion() {
         thumbnail_url: data.thumbnail_url || "",
         image_url: data.image_url || undefined,
         is_featured: data.is_featured || false,
+        question_type: (data.question_type as 'binary' | 'multi') || 'binary',
+        options: (data.options as unknown as QuestionOption[]) || undefined,
       };
     },
   });

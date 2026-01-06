@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, addDays } from "date-fns";
-import { CalendarIcon, Plus, HelpCircle } from "lucide-react";
+import { CalendarIcon, Plus, HelpCircle, X, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCategories } from "@/hooks/useCategories";
 import { useCreateQuestion } from "@/hooks/useCreateQuestion";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,12 @@ const formSchema = z.object({
   }).refine((date) => date > new Date(), {
     message: "End date must be in the future",
   }),
+  question_type: z.enum(['binary', 'multi']),
   yes_percentage: z.number().min(1).max(99),
+  options: z.array(z.object({
+    name: z.string().min(1, "Option name required"),
+    percentage: z.number().min(0).max(100),
+  })).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -84,19 +90,36 @@ export function CreateQuestionModal({ isOpen, onClose }: CreateQuestionModalProp
       description: "",
       category_id: undefined,
       ends_at: addDays(new Date(), 7),
+      question_type: 'binary',
       yes_percentage: 50,
+      options: [
+        { name: "", percentage: 50 },
+        { name: "", percentage: 50 },
+      ],
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "options",
+  });
+
+  const questionType = form.watch("question_type");
   const yesPercentage = form.watch("yes_percentage");
 
   const onSubmit = async (data: FormData) => {
+    const validOptions = data.question_type === 'multi' && data.options
+      ? data.options.filter(opt => opt.name && opt.name.trim() !== '')
+      : undefined;
+
     await createQuestion.mutateAsync({
       title: data.title,
       description: data.description,
       category_id: data.category_id ? parseInt(data.category_id) : null,
       ends_at: data.ends_at.toISOString(),
       yes_percentage: data.yes_percentage,
+      question_type: data.question_type,
+      options: validOptions as { name: string; percentage: number }[] | undefined,
     });
     
     form.reset();
@@ -105,19 +128,45 @@ export function CreateQuestionModal({ isOpen, onClose }: CreateQuestionModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Plus className="h-5 w-5 text-primary" />
             Create New Prediction
           </DialogTitle>
           <DialogDescription>
-            Create a yes/no prediction market for others to bet on.
+            Create a prediction market for others to bet on.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            {/* Question Type Tabs */}
+            <FormField
+              control={form.control}
+              name="question_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Answer Type</FormLabel>
+                  <Tabs value={field.value} onValueChange={field.onChange} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="binary" className="gap-2">
+                        <span className="text-success">Yes</span>/<span className="text-destructive">No</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="multi" className="gap-2">
+                        Multiple Choice
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <FormDescription>
+                    {field.value === 'binary' 
+                      ? "Simple yes or no question" 
+                      : "Multiple options, each with its own Yes/No betting"}
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
+
             {/* Question Title */}
             <FormField
               control={form.control}
@@ -127,18 +176,64 @@ export function CreateQuestionModal({ isOpen, onClose }: CreateQuestionModalProp
                   <FormLabel>Question</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Will Bitcoin reach $100k by end of 2025?"
+                      placeholder={questionType === 'binary' 
+                        ? "Will Bitcoin reach $100k by end of 2025?" 
+                        : "What will be the top AI model this month?"}
                       {...field}
                       className="bg-secondary/50"
                     />
                   </FormControl>
-                  <FormDescription>
-                    Ask a clear yes/no question that can be verified.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Multi-choice Options */}
+            {questionType === 'multi' && (
+              <div className="space-y-3">
+                <Label>Options</Label>
+                <div className="space-y-2">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2">
+                      <Input
+                        placeholder={`Option ${index + 1}`}
+                        {...form.register(`options.${index}.name`)}
+                        className="bg-secondary/50 flex-1"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="%"
+                        {...form.register(`options.${index}.percentage`, { valueAsNumber: true })}
+                        className="bg-secondary/50 w-20"
+                      />
+                      {fields.length > 2 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(index)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {fields.length < 10 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ name: "", percentage: 0 })}
+                    className="gap-1"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Option
+                  </Button>
+                )}
+              </div>
+            )}
 
             {/* Description */}
             <FormField
@@ -232,51 +327,53 @@ export function CreateQuestionModal({ isOpen, onClose }: CreateQuestionModalProp
               )}
             />
 
-            {/* Initial Odds */}
-            <FormField
-              control={form.control}
-              name="yes_percentage"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-2">
-                    <FormLabel>Initial Odds</FormLabel>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-[250px]">
-                          <p>Set the starting probability for "Yes". This affects the initial payout odds.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <Slider
-                        min={1}
-                        max={99}
-                        step={1}
-                        value={[field.value]}
-                        onValueChange={(v) => field.onChange(v[0])}
-                        className="py-2"
-                      />
-                      <div className="flex justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded-full bg-success" />
-                          <span className="text-success font-medium">Yes: {yesPercentage}%</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-destructive font-medium">No: {100 - yesPercentage}%</span>
-                          <div className="h-3 w-3 rounded-full bg-destructive" />
+            {/* Initial Odds - Only for Binary */}
+            {questionType === 'binary' && (
+              <FormField
+                control={form.control}
+                name="yes_percentage"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>Initial Odds</FormLabel>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[250px]">
+                            <p>Set the starting probability for "Yes". This affects the initial payout odds.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <FormControl>
+                      <div className="space-y-4">
+                        <Slider
+                          min={1}
+                          max={99}
+                          step={1}
+                          value={[field.value]}
+                          onValueChange={(v) => field.onChange(v[0])}
+                          className="py-2"
+                        />
+                        <div className="flex justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-full bg-success" />
+                            <span className="text-success font-medium">Yes: {yesPercentage}%</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-destructive font-medium">No: {100 - yesPercentage}%</span>
+                            <div className="h-3 w-3 rounded-full bg-destructive" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Submit Button */}
             <div className="flex gap-3 pt-2">

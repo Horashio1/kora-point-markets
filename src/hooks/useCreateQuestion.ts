@@ -8,6 +8,8 @@ interface CreateQuestionData {
   category_id: number | null;
   ends_at: string;
   yes_percentage: number;
+  question_type: 'binary' | 'multi';
+  options?: { name: string; percentage: number }[];
 }
 
 export function useCreateQuestion() {
@@ -32,6 +34,8 @@ export function useCreateQuestion() {
           user_id: user.id,
           total_votes: 0,
           is_featured: false,
+          question_type: data.question_type,
+          options: data.options || null,
         })
         .select()
         .single();
