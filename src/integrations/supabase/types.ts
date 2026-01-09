@@ -143,6 +143,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          option_name: string | null
           points_wagered: number
           prediction: string
           question_id: number
@@ -151,6 +152,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          option_name?: string | null
           points_wagered?: number
           prediction: string
           question_id: number
@@ -159,6 +161,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          option_name?: string | null
           points_wagered?: number
           prediction?: string
           question_id?: number

@@ -17,6 +17,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [selectedPrediction, setSelectedPrediction] = useState<'yes' | 'no' | null>(null);
+  const [selectedOptionName, setSelectedOptionName] = useState<string | undefined>(undefined);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -29,9 +30,10 @@ const Index = () => {
     return q.category_id === selectedCategory;
   });
 
-  const handleBet = (question: Question, prediction: 'yes' | 'no') => {
+  const handleBet = (question: Question, prediction: 'yes' | 'no', optionName?: string) => {
     setSelectedQuestion(question);
     setSelectedPrediction(prediction);
+    setSelectedOptionName(optionName);
     setIsModalOpen(true);
   };
 
@@ -160,11 +162,13 @@ const Index = () => {
       <BettingModal
         question={selectedQuestion}
         prediction={selectedPrediction}
+        optionName={selectedOptionName}
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
           setSelectedQuestion(null);
           setSelectedPrediction(null);
+          setSelectedOptionName(undefined);
         }}
       />
 
