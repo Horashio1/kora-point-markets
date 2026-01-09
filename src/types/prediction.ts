@@ -32,6 +32,7 @@ export interface UserVote {
   question_id: number;
   prediction: 'yes' | 'no';
   points_wagered: number;
+  option_name?: string | null; // For multi-choice questions, stores the option name
   created_at: string;
 }
 

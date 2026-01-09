@@ -1,20 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Libre+Caslon+Text&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
 
 @layer base {
   :root {
@@ -192,7 +183,8 @@
 
   .category-pill {
     @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200;
-    @apply bg-secondary text-muted-foreground hover:bg-primary/20 hover:text-primary;
+    /* Softer, lighter pill for unselected state with subtle orange outline */
+    @apply bg-accent text-foreground/70 border border-primary/40 hover:bg-primary/10 hover:text-primary hover:border-primary;
   }
 
   .category-pill-active {
