@@ -38,8 +38,35 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          role: Database["public"]["Enums"]["profile_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          role?: Database["public"]["Enums"]["profile_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          role?: Database["public"]["Enums"]["profile_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
+          approval_status: Database["public"]["Enums"]["question_approval_status"]
+          approved_at: string | null
+          approved_by: string | null
           category_id: number | null
           created_at: string
           description: string | null
@@ -57,6 +84,9 @@ export type Database = {
           yes_percentage: number
         }
         Insert: {
+          approval_status?: Database["public"]["Enums"]["question_approval_status"]
+          approved_at?: string | null
+          approved_by?: string | null
           category_id?: number | null
           created_at?: string
           description?: string | null
@@ -74,6 +104,9 @@ export type Database = {
           yes_percentage?: number
         }
         Update: {
+          approval_status?: Database["public"]["Enums"]["question_approval_status"]
+          approved_at?: string | null
+          approved_by?: string | null
           category_id?: number | null
           created_at?: string
           description?: string | null
@@ -182,10 +215,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_approval_role: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      profile_role: "user" | "approver" | "admin"
+      question_approval_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never

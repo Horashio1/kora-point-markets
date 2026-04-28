@@ -12,7 +12,15 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import { Coins, TrendingUp, AlertCircle, Sparkles, Zap, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRightLeft,
+  Coins,
+  Gauge,
+  Minus,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface BettingModalProps {
@@ -35,23 +43,27 @@ export function BettingModal({
   const [points, setPoints] = useState(10);
   const [localPrediction, setLocalPrediction] = useState<"yes" | "no" | null>(prediction);
 
-  const { data: userStats = {
-    total_points: 1000,
-    daily_allowance: 100,
-    points_spent_today: 0,
-    wins: 0,
-    losses: 0,
-  }} = useUserStats();
+  const {
+    data: userStats = {
+      total_points: 1000,
+      daily_allowance: 100,
+      points_spent_today: 0,
+      wins: 0,
+      losses: 0,
+    },
+  } = useUserStats();
 
   const placeBet = usePlaceBet();
 
   useEffect(() => {
-    if (isOpen) setLocalPrediction(prediction);
+    if (isOpen) {
+      setLocalPrediction(prediction);
+      setPoints(10);
+    }
   }, [isOpen, prediction, question?.id]);
 
   const pointsRemaining = userStats.daily_allowance - userStats.points_spent_today;
-  const maxBet = Math.min(pointsRemaining, userStats.total_points, 100);
-
+  const maxBet = Math.max(1, Math.min(pointsRemaining, userStats.total_points, 100));
   const effectivePrediction = localPrediction;
 
   const odds = useMemo(() => {
@@ -73,10 +85,15 @@ export function BettingModal({
     return Math.round(points * (100 / safeOdds));
   }, [points, odds]);
 
+  const quickAmounts = useMemo(
+    () => [10, 25, 50, maxBet].filter((value, index, arr) => value <= maxBet && arr.indexOf(value) === index),
+    [maxBet]
+  );
+
   if (!question) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="bg-gradient-to-b from-background to-background/95 backdrop-blur-xl border border-border/40 shadow-2xl sm:max-w-md rounded-2xl p-0 overflow-hidden">
+        <DialogContent className="glass-modal sm:max-w-md rounded-2xl p-0 overflow-hidden">
           <div className="p-6">
             <DialogHeader className="space-y-3">
               <DialogTitle className="font-display text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
@@ -138,7 +155,7 @@ export function BettingModal({
       setLocalPrediction(null);
       onPredictionChange?.(null);
     } catch {
-      // onError handled in mutation
+      // handled in mutation
     }
   };
 
@@ -146,288 +163,300 @@ export function BettingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-b from-background via-background to-background/95 backdrop-blur-xl border border-border/40 shadow-2xl sm:max-w-lg rounded-3xl p-0 overflow-hidden gap-0">
-        {/* Header with gradient accent */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
-          <div className="relative px-6 pt-6 pb-4">
-            <button
-              onClick={onClose}
-              className="absolute right-4 top-4 rounded-full p-2 hover:bg-muted/80 transition-colors"
-            >
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
-            
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-xl bg-primary/10">
-                <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <DialogTitle className="font-display text-xl font-bold tracking-tight">
-                Place Your Prediction
+      <DialogContent className="sm:max-w-3xl rounded-[28px] border border-slate-200 bg-white p-0 overflow-hidden gap-0 shadow-[0_24px_80px_rgba(15,23,42,0.2)]">
+        <div className="border-b border-slate-200 bg-slate-50 px-6 py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <DialogTitle className="font-display text-2xl font-bold tracking-tight text-slate-950">
+                Place Bet
               </DialogTitle>
+              <DialogDescription className="mt-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Order Ticket
+              </DialogDescription>
             </div>
-            
-            <DialogDescription className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
-              {question.title}
-            </DialogDescription>
+            <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500">
+              {optionName ? "Multi-market" : "Binary"}
+            </div>
           </div>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-700">
+            {question.title}
+          </p>
         </div>
 
-        <div className="px-6 pb-6 space-y-6">
-          {/* Prediction Choice */}
-          {optionName ? (
-            <div className="space-y-4">
-              <div className="rounded-2xl p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                  Selected Option
+        <div className="grid gap-0 lg:grid-cols-[1.35fr_0.95fr]">
+          <div className="space-y-6 border-b border-slate-200 px-6 py-6 lg:border-b-0 lg:border-r">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                  <Gauge className="h-3.5 w-3.5" />
+                  Price
                 </div>
-                <div className="font-display text-lg font-bold text-foreground">
-                  {optionName}
+                <div className="font-display text-2xl font-bold text-slate-950">{odds}¢</div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                  <Coins className="h-3.5 w-3.5" />
+                  Buying Power
+                </div>
+                <div className="font-display text-2xl font-bold text-slate-950">{pointsRemaining}</div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  Payout
+                </div>
+                <div className="font-display text-2xl font-bold text-slate-950">{potentialWin}</div>
+              </div>
+            </div>
+
+            {optionName ? (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                    Selected Option
+                  </div>
+                  <div className="mt-1 font-display text-lg font-bold text-slate-950">
+                    {optionName}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPrediction("yes")}
+                    className={cn(
+                      "rounded-2xl border px-4 py-5 text-left transition-all duration-200",
+                      effectivePrediction === "yes"
+                        ? "border-emerald-600 bg-emerald-50 shadow-[inset_0_0_0_1px_rgba(5,150,105,0.15)]"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    )}
+                  >
+                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Side</div>
+                    <div className={cn("mt-2 font-display text-3xl font-bold", effectivePrediction === "yes" ? "text-emerald-600" : "text-slate-900")}>
+                      YES
+                    </div>
+                    <div className="mt-3 text-sm text-slate-500">
+                      Buy at {question.options?.find((opt) => opt.name === optionName)?.percentage || 0}¢
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPrediction("no")}
+                    className={cn(
+                      "rounded-2xl border px-4 py-5 text-left transition-all duration-200",
+                      effectivePrediction === "no"
+                        ? "border-rose-600 bg-rose-50 shadow-[inset_0_0_0_1px_rgba(225,29,72,0.12)]"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    )}
+                  >
+                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Side</div>
+                    <div className={cn("mt-2 font-display text-3xl font-bold", effectivePrediction === "no" ? "text-rose-600" : "text-slate-900")}>
+                      NO
+                    </div>
+                    <div className="mt-3 text-sm text-slate-500">
+                      Buy at {100 - (question.options?.find((opt) => opt.name === optionName)?.percentage || 0)}¢
+                    </div>
+                  </button>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => setPrediction("yes")}
                   className={cn(
-                    "group relative rounded-2xl p-4 text-center transition-all duration-300 overflow-hidden",
+                    "rounded-3xl border px-5 py-6 text-left transition-all duration-200",
                     effectivePrediction === "yes"
-                      ? "bg-emerald-500/15 border-2 border-emerald-500 shadow-lg shadow-emerald-500/10"
-                      : "bg-muted/50 border-2 border-transparent hover:border-emerald-500/30 hover:bg-emerald-500/5"
+                      ? "border-emerald-600 bg-emerald-50 shadow-[inset_0_0_0_1px_rgba(5,150,105,0.15)]"
+                      : "border-slate-200 bg-white hover:border-slate-300"
                   )}
                 >
-                  {effectivePrediction === "yes" && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent" />
-                  )}
-                  <div className="relative">
-                    <div className={cn(
-                      "font-display text-xl font-bold transition-colors",
-                      effectivePrediction === "yes" ? "text-emerald-500" : "text-emerald-500/60"
-                    )}>
-                      YES
-                    </div>
-                    <div className={cn(
-                      "text-sm font-medium mt-1 transition-colors",
-                      effectivePrediction === "yes" ? "text-emerald-500/80" : "text-muted-foreground"
-                    )}>
-                      {question.options?.find((opt) => opt.name === optionName)?.percentage || 0}% odds
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Buy Side</div>
+                    <div className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                      {question.yes_percentage}¢
                     </div>
                   </div>
+                  <div className={cn("mt-5 font-display text-4xl font-bold", effectivePrediction === "yes" ? "text-emerald-600" : "text-slate-900")}>
+                    YES
+                  </div>
+                  <div className="mt-3 text-sm text-slate-500">Buy contracts if you think the event happens.</div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setPrediction("no")}
                   className={cn(
-                    "group relative rounded-2xl p-4 text-center transition-all duration-300 overflow-hidden",
+                    "rounded-3xl border px-5 py-6 text-left transition-all duration-200",
                     effectivePrediction === "no"
-                      ? "bg-rose-500/15 border-2 border-rose-500 shadow-lg shadow-rose-500/10"
-                      : "bg-muted/50 border-2 border-transparent hover:border-rose-500/30 hover:bg-rose-500/5"
+                      ? "border-rose-600 bg-rose-50 shadow-[inset_0_0_0_1px_rgba(225,29,72,0.12)]"
+                      : "border-slate-200 bg-white hover:border-slate-300"
                   )}
                 >
-                  {effectivePrediction === "no" && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent" />
-                  )}
-                  <div className="relative">
-                    <div className={cn(
-                      "font-display text-xl font-bold transition-colors",
-                      effectivePrediction === "no" ? "text-rose-500" : "text-rose-500/60"
-                    )}>
-                      NO
-                    </div>
-                    <div className={cn(
-                      "text-sm font-medium mt-1 transition-colors",
-                      effectivePrediction === "no" ? "text-rose-500/80" : "text-muted-foreground"
-                    )}>
-                      {100 - (question.options?.find((opt) => opt.name === optionName)?.percentage || 0)}% odds
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Buy Side</div>
+                    <div className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                      {100 - question.yes_percentage}¢
                     </div>
                   </div>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setPrediction("yes")}
-                className={cn(
-                  "group relative rounded-2xl p-5 text-center transition-all duration-300 overflow-hidden",
-                  effectivePrediction === "yes"
-                    ? "bg-emerald-500/15 border-2 border-emerald-500 shadow-lg shadow-emerald-500/10 scale-[1.02]"
-                    : "bg-muted/50 border-2 border-transparent hover:border-emerald-500/30 hover:bg-emerald-500/5"
-                )}
-              >
-                {effectivePrediction === "yes" && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent" />
-                )}
-                <div className="relative">
-                  <div className={cn(
-                    "font-display text-3xl font-bold transition-colors",
-                    effectivePrediction === "yes" ? "text-emerald-500" : "text-emerald-500/60"
-                  )}>
-                    YES
-                  </div>
-                  <div className={cn(
-                    "text-sm font-medium mt-2 transition-colors",
-                    effectivePrediction === "yes" ? "text-emerald-500/80" : "text-muted-foreground"
-                  )}>
-                    {question.yes_percentage}% odds
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPrediction("no")}
-                className={cn(
-                  "group relative rounded-2xl p-5 text-center transition-all duration-300 overflow-hidden",
-                  effectivePrediction === "no"
-                    ? "bg-rose-500/15 border-2 border-rose-500 shadow-lg shadow-rose-500/10 scale-[1.02]"
-                    : "bg-muted/50 border-2 border-transparent hover:border-rose-500/30 hover:bg-rose-500/5"
-                )}
-              >
-                {effectivePrediction === "no" && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent" />
-                )}
-                <div className="relative">
-                  <div className={cn(
-                    "font-display text-3xl font-bold transition-colors",
-                    effectivePrediction === "no" ? "text-rose-500" : "text-rose-500/60"
-                  )}>
+                  <div className={cn("mt-5 font-display text-4xl font-bold", effectivePrediction === "no" ? "text-rose-600" : "text-slate-900")}>
                     NO
                   </div>
-                  <div className={cn(
-                    "text-sm font-medium mt-2 transition-colors",
-                    effectivePrediction === "no" ? "text-rose-500/80" : "text-muted-foreground"
-                  )}>
-                    {100 - question.yes_percentage}% odds
-                  </div>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {/* Points Slider Section */}
-          <div className="space-y-4 rounded-2xl bg-muted/30 p-5 border border-border/50">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Wager Amount</span>
-              <div className="flex items-center gap-2 bg-background/80 rounded-full px-3 py-1.5 border border-border/50">
-                <Coins className="h-4 w-4 text-amber-500" />
-                <span className="font-display text-lg font-bold text-foreground">{points}</span>
+                  <div className="mt-3 text-sm text-slate-500">Buy contracts if you think the event does not happen.</div>
+                </button>
               </div>
-            </div>
+            )}
 
-            <div className="pt-2 pb-1">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-900">Contracts</span>
+                <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5">
+                  <Coins className="h-4 w-4 text-slate-500" />
+                  <span className="font-display text-lg font-bold text-slate-950">{points}</span>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {quickAmounts.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setPoints(value)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                      points === value
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                    )}
+                  >
+                    {value === maxBet ? `Max ${value}` : `${value} contracts`}
+                  </button>
+                ))}
+              </div>
+
               <Slider
                 value={[points]}
                 onValueChange={(value) => setPoints(value[0])}
                 max={maxBet}
                 min={1}
                 step={1}
-                className="py-2"
+                className="py-5"
               />
-            </div>
 
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span className="bg-muted/50 px-2 py-1 rounded-md">Min: 1</span>
-              <span className="bg-muted/50 px-2 py-1 rounded-md">Max: {maxBet}</span>
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>1</span>
+                <span>{maxBet}</span>
+              </div>
             </div>
           </div>
 
-          {/* Potential Win Card */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 border border-primary/20">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-primary/10">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+          <div className="space-y-5 bg-slate-50 px-6 py-6">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-950">Order Summary</div>
+                  <div className="mt-1 text-xs uppercase tracking-[0.22em] text-slate-500">
+                    {effectivePrediction ? effectivePrediction.toUpperCase() : "Choose a side"}
+                  </div>
+                </div>
+                <div className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600">
+                  Market
+                </div>
+              </div>
+
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Side</span>
+                  <span className="font-semibold text-slate-950">{effectivePrediction ? effectivePrediction.toUpperCase() : "-"}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Price</span>
+                  <span className="font-semibold text-slate-950">{odds}¢</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Contracts</span>
+                  <span className="font-semibold text-slate-950">{points}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Potential payout</span>
+                  <span className="font-semibold text-slate-950">{potentialWin}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Remaining daily allowance</span>
+                  <span className="font-semibold text-slate-950">{pointsRemaining}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5">
+              <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.22em] text-slate-500">
+                <span>Allowance</span>
+                <span>{pointsRemaining} / {userStats.daily_allowance}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-slate-900 transition-all duration-500"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+              <p className="mt-3 text-sm text-slate-600">
+                You’re buying contracts at the current implied price. Higher conviction usually means more size, not more decoration.
+              </p>
+            </div>
+
+            {points > pointsRemaining && (
+              <div className="flex items-start gap-3 rounded-3xl border border-rose-200 bg-rose-50 p-4">
+                <div className="rounded-full bg-white p-2">
+                  <AlertCircle className="h-4 w-4 text-rose-600" />
                 </div>
                 <div>
-                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Potential Return
-                  </div>
-                  <div className="text-sm text-muted-foreground mt-0.5">
-                    If you win
+                  <div className="text-sm font-semibold text-rose-700">Insufficient daily allowance</div>
+                  <div className="mt-1 text-sm text-rose-600">
+                    You only have {pointsRemaining} contracts left today.
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Coins className="h-5 w-5 text-amber-500" />
-                <span className="font-display text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  {potentialWin}
-                </span>
-              </div>
-            </div>
-          </div>
+            )}
 
-          {/* Warning */}
-          {points > pointsRemaining && (
-            <div className="flex items-center gap-3 rounded-2xl bg-rose-500/10 p-4 border border-rose-500/20">
-              <div className="p-2 rounded-xl bg-rose-500/10">
-                <AlertCircle className="h-4 w-4 text-rose-500" />
-              </div>
-              <span className="text-sm font-medium text-rose-500">
-                You only have {pointsRemaining} points left today
-              </span>
+            <div className="flex gap-3 pt-1">
+              <Button
+                variant="outline"
+                className="h-12 flex-1 rounded-2xl border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                className={cn(
+                  "h-12 flex-1 rounded-2xl font-semibold transition-all duration-200",
+                  effectivePrediction === "yes"
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : effectivePrediction === "no"
+                      ? "bg-rose-600 text-white hover:bg-rose-700"
+                      : "bg-slate-900 text-white hover:bg-slate-800"
+                )}
+                onClick={handlePlaceBet}
+                disabled={
+                  !effectivePrediction ||
+                  points > pointsRemaining ||
+                  points > userStats.total_points ||
+                  placeBet.isPending
+                }
+              >
+                {placeBet.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Submitting...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Buy {effectivePrediction ? effectivePrediction.toUpperCase() : ""}
+                  </span>
+                )}
+              </Button>
             </div>
-          )}
-
-          {/* Daily Allowance Progress */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground font-medium">Daily Allowance</span>
-              <span className="text-muted-foreground">
-                <span className="text-foreground font-semibold">{pointsRemaining}</span>
-                {" / "}{userStats.daily_allowance} remaining
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-              <div 
-                className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-500"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button 
-              variant="outline" 
-              className="flex-1 h-12 rounded-xl border-border/50 hover:bg-muted/50 transition-all" 
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-            <Button
-              className={cn(
-                "flex-1 h-12 rounded-xl font-semibold transition-all duration-300",
-                effectivePrediction === "yes"
-                  ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
-                  : effectivePrediction === "no"
-                  ? "bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25"
-                  : "bg-primary hover:bg-primary/90"
-              )}
-              onClick={handlePlaceBet}
-              disabled={
-                !effectivePrediction ||
-                points > pointsRemaining ||
-                points > userStats.total_points ||
-                placeBet.isPending
-              }
-            >
-              {placeBet.isPending ? (
-                <span className="flex items-center gap-2">
-                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Placing...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
-                  Confirm Bet
-                </span>
-              )}
-            </Button>
           </div>
         </div>
       </DialogContent>

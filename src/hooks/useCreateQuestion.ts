@@ -34,6 +34,7 @@ export function useCreateQuestion() {
           user_id: user.id,
           total_votes: 0,
           is_featured: false,
+          approval_status: "pending",
           question_type: data.question_type,
           options: data.options || null,
         })
@@ -45,7 +46,9 @@ export function useCreateQuestion() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["questions"] });
-      toast.success("Question created successfully!");
+      toast.success("Prediction submitted for approval!", {
+        description: "An approver can review it before it goes live to everyone.",
+      });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to create question");

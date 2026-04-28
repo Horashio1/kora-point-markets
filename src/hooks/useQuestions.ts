@@ -12,6 +12,7 @@ export function useQuestions() {
           *,
           category:categories(*)
         `)
+        .eq("approval_status", "approved")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -28,6 +29,7 @@ export function useQuestions() {
         thumbnail_url: q.thumbnail_url || "",
         image_url: q.image_url || undefined,
         is_featured: q.is_featured || false,
+        approval_status: q.approval_status,
         question_type: (q.question_type as 'binary' | 'multi') || 'binary',
         options: (q.options as unknown as QuestionOption[]) || undefined,
       }));
@@ -46,6 +48,7 @@ export function useFeaturedQuestion() {
           category:categories(*)
         `)
         .eq("is_featured", true)
+        .eq("approval_status", "approved")
         .limit(1)
         .maybeSingle();
 
@@ -64,6 +67,7 @@ export function useFeaturedQuestion() {
         thumbnail_url: data.thumbnail_url || "",
         image_url: data.image_url || undefined,
         is_featured: data.is_featured || false,
+        approval_status: data.approval_status,
         question_type: (data.question_type as 'binary' | 'multi') || 'binary',
         options: (data.options as unknown as QuestionOption[]) || undefined,
       };

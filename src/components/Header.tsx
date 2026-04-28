@@ -12,8 +12,8 @@ export function Header() {
   const { user, signOut } = useAuth();
   const { data: userStats } = useUserStats();
 
-  const pointsRemaining = userStats 
-    ? userStats.daily_allowance - userStats.points_spent_today 
+  const pointsRemaining = userStats
+    ? userStats.daily_allowance - userStats.points_spent_today
     : 0;
 
   const handleSignOut = async () => {
@@ -30,14 +30,14 @@ export function Header() {
               <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             <span className="font-display text-xl font-bold">
-              Kora<span className="text-primary">.lk</span>
+              Bet<span className="text-primary">.lk</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
             <a href="#" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
-              Markets
+              Marketss
             </a>
             <a href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Leaderboard
@@ -60,7 +60,7 @@ export function Header() {
                 Create
               </Button>
             )}
-            
+
             {user && userStats && (
               <div className="glass-card hidden items-center gap-2 px-4 py-2 sm:flex">
                 <Coins className="h-4 w-4 text-primary" />
@@ -72,7 +72,7 @@ export function Header() {
                 </span>
               </div>
             )}
-            
+
             {user ? (
               <div className="hidden items-center gap-2 sm:flex">
                 <span className="text-sm text-muted-foreground">
@@ -83,9 +83,14 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <Button variant="glow" size="sm" className="hidden sm:flex" asChild>
+              <Button
+                size="sm"
+                className="hidden sm:flex text-white btn-glow bg-[image:var(--gradient-primary)] hover:bg-[image:var(--gradient-primary)] hover:brightness-110"
+                asChild
+              >
                 <Link to="/auth">Sign In</Link>
               </Button>
+
             )}
 
             <Button
@@ -114,10 +119,10 @@ export function Header() {
               )}
               {user ? (
                 <>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-fit gap-1.5" 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-fit gap-1.5"
                     onClick={() => {
                       setCreateModalOpen(true);
                       setMobileMenuOpen(false);
@@ -132,9 +137,14 @@ export function Header() {
                   </Button>
                 </>
               ) : (
-                <Button variant="glow" size="sm" className="w-fit" asChild>
+                <Button
+                  size="sm"
+                  className="w-fit text-white btn-glow bg-[image:var(--gradient-primary)] hover:bg-[image:var(--gradient-primary)] hover:brightness-110"
+                  asChild
+                >
                   <Link to="/auth">Sign In</Link>
                 </Button>
+
               )}
             </nav>
           </div>

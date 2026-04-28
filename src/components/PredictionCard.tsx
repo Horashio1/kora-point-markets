@@ -62,11 +62,18 @@ export function PredictionCard({ question, onBet }: PredictionCardProps) {
   const marketVolume = useMemo(() => question.total_votes.toLocaleString(), [question.total_votes]);
 
   return (
-    <div className="relative w-full rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:border-gray-300">
+    <div
+      className={[
+        "relative w-full rounded-2xl border",
+        "border-border bg-card text-card-foreground",
+        "shadow-sm transition",
+        "hover:border-primary/40 hover:shadow-[0_0_40px_-16px_hsl(var(--neon-blue)/0.35)]",
+      ].join(" ")}
+    >
       {/* Header */}
       <div className="px-4 pt-4">
         <div className="flex items-start gap-3">
-          <div className="h-10 w-10 overflow-hidden rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+          <div className="h-10 w-10 overflow-hidden rounded-xl bg-accent flex items-center justify-center flex-shrink-0 border border-border/60">
             {question.thumbnail_url ? (
               <img src={question.thumbnail_url} alt={question.title} className="h-full w-full object-cover" />
             ) : (
@@ -75,20 +82,22 @@ export function PredictionCard({ question, onBet }: PredictionCardProps) {
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="text-[12px] text-gray-600 leading-none">{question.category?.name || "Prediction"}</div>
-            <div className="mt-1 text-[15px] font-semibold leading-snug text-gray-900 line-clamp-2">
+            <div className="text-[12px] text-muted-foreground leading-none">
+              {question.category?.name || "Prediction"}
+            </div>
+            <div className="mt-1 text-[15px] font-semibold leading-snug text-foreground line-clamp-2">
               {question.title}
             </div>
           </div>
 
-          <div className="text-[12px] text-gray-500 whitespace-nowrap">{formatCountdown(timeLeft)}</div>
+          <div className="text-[12px] text-muted-foreground/80 whitespace-nowrap">{formatCountdown(timeLeft)}</div>
         </div>
       </div>
 
       {/* Body */}
       <div className="px-4 pt-4 pb-3">
         {isBinary ? (
-          <BinarySoftKalshi
+          <BinarySoftTron
             yesPrice={yesPrice}
             noPrice={noPrice}
             yesReturn={yesReturn}
@@ -107,31 +116,30 @@ export function PredictionCard({ question, onBet }: PredictionCardProps) {
 
       {/* Footer */}
       <div className="flex items-center justify-between px-4 pb-4">
-        <div className="text-[12px] text-gray-400">
-          <span className="text-gray-400">$</span>
-          <span className="font-medium text-gray-400">{marketVolume}</span>
+        <div className="text-[12px] text-muted-foreground">
+          <span className="text-muted-foreground/70">$</span>
+          <span className="font-medium text-muted-foreground">{marketVolume}</span>
         </div>
 
         <button
           type="button"
-          className="h-9 w-9 rounded-full border border-gray-200 bg-white shadow-sm flex items-center justify-center transition hover:bg-gray-50"
+          className={[
+            "h-9 w-9 rounded-full border",
+            "border-border bg-card/80 shadow-sm",
+            "flex items-center justify-center transition",
+            "hover:bg-accent hover:border-primary/30",
+          ].join(" ")}
           aria-label="Add"
         >
-          <Plus className="h-4 w-4 text-gray-600" />
+          <Plus className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
     </div>
   );
 }
 
-/* ------------------ Binary: SUPREME COURT (soft pill buttons) ------------------ */
-/**
- * Matches the screenshot:
- * - Two soft pills (light blue, light purple)
- * - Text is inline: "Yes 26¢" and "No 77¢"
- * - Under each pill: "$100 → $366" and "$100 → $128" with green payout
- */
-function BinarySoftKalshi(props: {
+/* ------------------ Binary: dark Tron soft pills (blue / purple) ------------------ */
+function BinarySoftTron(props: {
   yesPrice: number;
   noPrice: number;
   yesReturn: number;
@@ -144,32 +152,36 @@ function BinarySoftKalshi(props: {
   return (
     <div>
       <div className="grid grid-cols-2 gap-4">
-        {/* YES pill */}
+        {/* YES pill (blue) */}
         <button
           type="button"
           onClick={onYes}
           className={[
-            "h-10 rounded-lg",
-            "bg-blue-50 hover:bg-blue-100",
-            "text-blue-700",
+            "h-10 rounded-lg border",
+            "border-[hsl(var(--neon-blue)/0.25)]",
+            "bg-[hsl(var(--neon-blue)/0.10)] hover:bg-[hsl(var(--neon-blue)/0.16)]",
+            "text-[hsl(var(--neon-blue))]",
             "flex items-center justify-center",
             "transition",
+            "shadow-[0_0_30px_-18px_hsl(var(--neon-blue)/0.55)]",
           ].join(" ")}
         >
           <span className="text-[13px] font-semibold">Yes</span>
           <span className="ml-2 text-[14px] font-extrabold">{yesPrice}¢</span>
         </button>
 
-        {/* NO pill */}
+        {/* NO pill (purple but subdued) */}
         <button
           type="button"
           onClick={onNo}
           className={[
-            "h-10 rounded-lg",
-            "bg-purple-50 hover:bg-purple-100",
-            "text-purple-700",
+            "h-10 rounded-lg border",
+            "border-[hsl(var(--neon-purple)/0.22)]",
+            "bg-[hsl(var(--neon-purple)/0.10)] hover:bg-[hsl(var(--neon-purple)/0.14)]",
+            "text-[hsl(var(--neon-purple))]",
             "flex items-center justify-center",
             "transition",
+            "shadow-[0_0_30px_-18px_hsl(var(--neon-purple)/0.35)]",
           ].join(" ")}
         >
           <span className="text-[13px] font-semibold">No</span>
@@ -179,22 +191,22 @@ function BinarySoftKalshi(props: {
 
       {/* $100 -> $X row (aligned under each pill) */}
       <div className="mt-3 grid grid-cols-2 gap-4 text-[12px]">
-        <div className="text-center text-gray-400">
+        <div className="text-center text-muted-foreground">
           <span>$100 </span>
-          <span className="text-gray-300">→ </span>
-          <span className="font-semibold text-emerald-500">${yesReturn}</span>
+          <span className="text-muted-foreground/60">→ </span>
+          <span className="font-semibold text-emerald-400">${yesReturn}</span>
         </div>
-        <div className="text-center text-gray-400">
+        <div className="text-center text-muted-foreground">
           <span>$100 </span>
-          <span className="text-gray-300">→ </span>
-          <span className="font-semibold text-emerald-500">${noReturn}</span>
+          <span className="text-muted-foreground/60">→ </span>
+          <span className="font-semibold text-emerald-400">${noReturn}</span>
         </div>
       </div>
     </div>
   );
 }
 
-/* ----------------------- Multi: FED DECISION style rows ----------------------- */
+/* ----------------------- Multi: dark Tron rows ----------------------- */
 function MultiChoiceList(props: {
   options: QuestionOption[];
   onYes: (name: string) => void;
@@ -217,25 +229,43 @@ function MultiOptionRow(props: { option: QuestionOption; onYes: () => void; onNo
   return (
     <div className="flex items-center gap-3">
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[14px] font-medium text-gray-900">{option.name}</div>
+        <div className="truncate text-[14px] font-medium text-foreground">{option.name}</div>
       </div>
 
-      <div className="w-12 text-right text-[14px] font-semibold text-gray-900">{option.percentage}%</div>
+      <div className="w-12 text-right text-[14px] font-semibold text-foreground">{option.percentage}%</div>
 
-      {/* Kalshi-like purple gradient Yes/No pill */}
-      <div className="inline-flex overflow-hidden rounded-full border border-purple-100 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 shadow-sm">
+      {/* Neon pill group (blue/purple, dark-mode friendly) */}
+      <div
+        className={[
+          "inline-flex overflow-hidden rounded-full border",
+          "border-border/70",
+          "bg-gradient-to-r",
+          "from-[hsl(var(--neon-blue)/0.12)]",
+          "via-[hsl(var(--neon-indigo)/0.10)]",
+          "to-[hsl(var(--neon-purple)/0.08)]",
+          "shadow-[0_0_26px_-18px_hsl(var(--neon-blue)/0.35)]",
+        ].join(" ")}
+      >
         <button
           type="button"
           onClick={onYes}
-          className="px-3 py-1 text-[12px] font-medium text-indigo-700 hover:bg-white/70 transition"
+          className={[
+            "px-3 py-1 text-[12px] font-medium",
+            "text-[hsl(var(--neon-blue))]",
+            "hover:bg-white/10 transition",
+          ].join(" ")}
         >
           Yes
         </button>
-        <div className="w-px bg-purple-100" />
+        <div className="w-px bg-border/70" />
         <button
           type="button"
           onClick={onNo}
-          className="px-3 py-1 text-[12px] font-medium text-purple-700 hover:bg-white/70 transition"
+          className={[
+            "px-3 py-1 text-[12px] font-medium",
+            "text-[hsl(var(--neon-purple))]",
+            "hover:bg-white/10 transition",
+          ].join(" ")}
         >
           No
         </button>
