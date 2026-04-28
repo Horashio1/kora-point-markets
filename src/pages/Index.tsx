@@ -54,7 +54,8 @@ const Index = () => {
               <span>Sri Lanka's #1 Prediction Market</span>
             </div>
             <h1 className="mb-4 font-display text-4xl font-bold leading-tight text-foreground md:text-5xl lg:text-6xl">
-              Predict the Future,{" "}
+              Predict the Future,
+              <br />
               <span className="gradient-text">Win Big</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-6">
