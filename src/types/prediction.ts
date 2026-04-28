@@ -22,6 +22,7 @@ export interface Question {
   thumbnail_url: string;
   image_url?: string;
   is_featured?: boolean;
+  approval_status: 'pending' | 'approved' | 'rejected';
   question_type: 'binary' | 'multi';
   options?: QuestionOption[];
 }

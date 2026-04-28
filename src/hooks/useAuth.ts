@@ -18,7 +18,7 @@ export function useAuth() {
         // Initialize user stats when user signs in
         if (event === "SIGNED_IN" && session?.user) {
           setTimeout(() => {
-            initializeUserStats(session.user.id);
+            initializeUserResources(session.user);
           }, 0);
         }
       }
@@ -29,10 +29,23 @@ export function useAuth() {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      if (session?.user) {
+        setTimeout(() => {
+          initializeUserResources(session.user);
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const initializeUserResources = async (currentUser: User) => {
+    await Promise.all([
+      initializeUserStats(currentUser.id),
+      initializeUserProfile(currentUser),
+    ]);
+  };
 
   const initializeUserStats = async (userId: string) => {
     const { data: existingStats } = await supabase
@@ -49,6 +62,28 @@ export function useAuth() {
         points_spent_today: 0,
         wins: 0,
         losses: 0,
+      });
+    }
+  };
+
+  const initializeUserProfile = async (currentUser: User) => {
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      const displayName =
+        currentUser.user_metadata?.full_name ||
+        currentUser.user_metadata?.name ||
+        currentUser.email ||
+        null;
+
+      await supabase.from("profiles").insert({
+        user_id: currentUser.id,
+        display_name: displayName,
+        role: "user",
       });
     }
   };

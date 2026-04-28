@@ -12,6 +12,7 @@ import { Question } from "@/types/prediction";
 import { TrendingUp, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { LineGraphBackground } from "@/components/LineGraphBackground";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -24,7 +25,7 @@ const Index = () => {
   const { user } = useAuth();
   const { data: questions = [], isLoading: questionsLoading } = useQuestions();
   const { data: featuredQuestion } = useFeaturedQuestion();
-  
+
   const filteredQuestions = questions.filter((q) => {
     if (selectedCategory === null) return true;
     return q.category_id === selectedCategory;
@@ -43,9 +44,9 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-8">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-        
-        <div className="container relative mx-auto px-4">
+        <LineGraphBackground />
+
+        <div className="container relative mx-auto px-4 z-10">
           {/* Hero Text */}
           <div className="mx-auto mb-8 max-w-3xl text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm text-primary">
@@ -57,26 +58,30 @@ const Index = () => {
               <span className="gradient-text">Win Big</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-6">
-              Bet on politics, sports, crypto & more using your daily point allowance. 
+              Bet on politics, sports, crypto & more using your daily point allowance.
               Make predictions. Beat the crowd. Climb the leaderboard.
             </p>
 
             {/* Prominent Create Button */}
             {user ? (
-              <Button 
-                variant="glow" 
-                size="lg" 
-                className="gap-2 text-base"
+              <Button
+                size="lg"
+                className="gap-2 text-base bg-[image:var(--gradient-primary)] text-white btn-glow hover:brightness-110"
                 onClick={() => setIsCreateModalOpen(true)}
               >
                 <Plus className="h-5 w-5" />
                 Create a Prediction
               </Button>
             ) : (
-              <Button variant="glow" size="lg" className="gap-2 text-base" asChild>
+              <Button
+                size="lg"
+                className="gap-2 text-base bg-[image:var(--gradient-primary)] text-white btn-glow hover:brightness-110"
+                asChild
+              >
                 <Link to="/auth">Sign In to Create Predictions</Link>
               </Button>
             )}
+
           </div>
 
           {/* Stats Bar */}
@@ -149,10 +154,10 @@ const Index = () => {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
                 <TrendingUp className="h-4 w-4 text-primary" />
               </div>
-              <span className="font-display font-bold">Kora.lk</span>
+              <span className="font-display font-bold">Bet.lk</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 Kora.lk. Prediction markets for Sri Lanka.
+              © 2025 Bet.lk. Prediction markets for Sri Lanka.
             </p>
           </div>
         </div>
