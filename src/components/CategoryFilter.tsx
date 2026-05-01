@@ -1,3 +1,5 @@
+'use client'
+
 import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 

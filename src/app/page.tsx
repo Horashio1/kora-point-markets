@@ -1,42 +1,49 @@
-import { useState } from "react";
-import { Header } from "@/components/Header";
-import { CategoryFilter } from "@/components/CategoryFilter";
-import { PredictionCard } from "@/components/PredictionCard";
-import { FeaturedPrediction } from "@/components/FeaturedPrediction";
-import { BettingModal } from "@/components/BettingModal";
-import { StatsBar } from "@/components/StatsBar";
-import { CreateQuestionModal } from "@/components/CreateQuestionModal";
-import { useQuestions, useFeaturedQuestion } from "@/hooks/useQuestions";
-import { useAuth } from "@/hooks/useAuth";
-import { Question } from "@/types/prediction";
-import { TrendingUp, Loader2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { LineGraphBackground } from "@/components/LineGraphBackground";
+'use client'
 
-const Index = () => {
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
-  const [selectedPrediction, setSelectedPrediction] = useState<'yes' | 'no' | null>(null);
-  const [selectedOptionName, setSelectedOptionName] = useState<string | undefined>(undefined);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+import { useState } from 'react'
+import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { Header } from '@/components/Header'
+import { CategoryFilter } from '@/components/CategoryFilter'
+import { PredictionCard } from '@/components/PredictionCard'
+import { FeaturedPrediction } from '@/components/FeaturedPrediction'
+import { BettingModal } from '@/components/BettingModal'
+import { StatsBar } from '@/components/StatsBar'
+import { CreateQuestionModal } from '@/components/CreateQuestionModal'
+import { useQuestions, useFeaturedQuestion } from '@/hooks/useQuestions'
+import { useAuth } from '@/hooks/useAuth'
+import { Question } from '@/types/prediction'
+import { TrendingUp, Loader2, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
-  const { user } = useAuth();
-  const { data: questions = [], isLoading: questionsLoading } = useQuestions();
-  const { data: featuredQuestion } = useFeaturedQuestion();
+const LineGraphBackground = dynamic(
+  () => import('@/components/LineGraphBackground').then((m) => m.LineGraphBackground),
+  { ssr: false },
+)
+
+export default function HomePage() {
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
+  const [selectedPrediction, setSelectedPrediction] = useState<'yes' | 'no' | null>(null)
+  const [selectedOptionName, setSelectedOptionName] = useState<string | undefined>(undefined)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
+  const { user } = useAuth()
+  const { data: questions = [], isLoading: questionsLoading } = useQuestions()
+  const { data: featuredQuestion } = useFeaturedQuestion()
 
   const filteredQuestions = questions.filter((q) => {
-    if (selectedCategory === null) return true;
-    return q.category_id === selectedCategory;
-  });
+    if (selectedCategory === null) return true
+    return q.category_id === selectedCategory
+  })
 
   const handleBet = (question: Question, prediction: 'yes' | 'no', optionName?: string) => {
-    setSelectedQuestion(question);
-    setSelectedPrediction(prediction);
-    setSelectedOptionName(optionName);
-    setIsModalOpen(true);
-  };
+    setSelectedQuestion(question)
+    setSelectedPrediction(prediction)
+    setSelectedOptionName(optionName)
+    setIsModalOpen(true)
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,7 +54,6 @@ const Index = () => {
         <LineGraphBackground />
 
         <div className="container relative mx-auto px-4 z-10">
-          {/* Hero Text */}
           <div className="mx-auto mb-8 max-w-3xl text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm text-primary">
               <TrendingUp className="h-4 w-4" />
@@ -63,7 +69,6 @@ const Index = () => {
               Make predictions. Beat the crowd. Climb the leaderboard.
             </p>
 
-            {/* Prominent Create Button */}
             {user ? (
               <Button
                 size="lg"
@@ -79,18 +84,15 @@ const Index = () => {
                 className="gap-2 text-base bg-[image:var(--gradient-primary)] text-white btn-glow hover:brightness-110"
                 asChild
               >
-                <Link to="/auth">Sign In to Create Predictions</Link>
+                <Link href="/auth">Sign In to Create Predictions</Link>
               </Button>
             )}
-
           </div>
 
-          {/* Stats Bar */}
           <div className="mb-8">
             <StatsBar />
           </div>
 
-          {/* Featured Prediction */}
           {featuredQuestion && (
             <div className="mb-8 animate-fade-in">
               <FeaturedPrediction question={featuredQuestion} onBet={handleBet} />
@@ -104,12 +106,8 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="font-display text-2xl font-bold text-foreground">
-                Active Markets
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {filteredQuestions.length} markets available
-              </p>
+              <h2 className="font-display text-2xl font-bold text-foreground">Active Markets</h2>
+              <p className="text-sm text-muted-foreground">{filteredQuestions.length} markets available</p>
             </div>
             <CategoryFilter
               selectedCategory={selectedCategory}
@@ -117,14 +115,12 @@ const Index = () => {
             />
           </div>
 
-          {/* Loading State */}
           {questionsLoading && (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           )}
 
-          {/* Questions Grid */}
           {!questionsLoading && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredQuestions.map((question, index) => (
@@ -164,27 +160,23 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Betting Modal */}
       <BettingModal
         question={selectedQuestion}
         prediction={selectedPrediction}
         optionName={selectedOptionName}
         isOpen={isModalOpen}
         onClose={() => {
-          setIsModalOpen(false);
-          setSelectedQuestion(null);
-          setSelectedPrediction(null);
-          setSelectedOptionName(undefined);
+          setIsModalOpen(false)
+          setSelectedQuestion(null)
+          setSelectedPrediction(null)
+          setSelectedOptionName(undefined)
         }}
       />
 
-      {/* Create Question Modal */}
       <CreateQuestionModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
-  );
-};
-
-export default Index;
+  )
+}

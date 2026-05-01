@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useMemo, useState } from "react";
 import { Question } from "@/types/prediction";
 import { Button } from "@/components/ui/button";

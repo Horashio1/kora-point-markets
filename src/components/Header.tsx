@@ -1,31 +1,29 @@
-import { Button } from "@/components/ui/button";
-import { Coins, TrendingUp, Menu, LogOut, Plus } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useUserStats } from "@/hooks/useUserStats";
-import { CreateQuestionModal } from "@/components/CreateQuestionModal";
+'use client'
+
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Coins, TrendingUp, Menu, LogOut, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { useAuth } from '@/hooks/useAuth'
+import { useUserStats } from '@/hooks/useUserStats'
+import { CreateQuestionModal } from '@/components/CreateQuestionModal'
 
 export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const { user, signOut } = useAuth();
-  const { data: userStats } = useUserStats();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const { user, signOut } = useAuth()
+  const { data: userStats } = useUserStats()
 
   const pointsRemaining = userStats
     ? userStats.daily_allowance - userStats.points_spent_today
-    : 0;
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
+    : 0
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
               <TrendingUp className="h-5 w-5 text-primary" />
             </div>
@@ -37,7 +35,7 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
             <a href="#" className="text-sm font-medium text-foreground transition-colors hover:text-primary">
-              Marketss
+              Markets
             </a>
             <a href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Leaderboard
@@ -76,9 +74,9 @@ export function Header() {
             {user ? (
               <div className="hidden items-center gap-2 sm:flex">
                 <span className="text-sm text-muted-foreground">
-                  {user.email?.split("@")[0]}
+                  {user.email?.split('@')[0]}
                 </span>
-                <Button variant="ghost" size="icon" onClick={handleSignOut}>
+                <Button variant="ghost" size="icon" onClick={signOut}>
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>
@@ -88,9 +86,8 @@ export function Header() {
                 className="hidden sm:flex text-white btn-glow bg-[image:var(--gradient-primary)] hover:bg-[image:var(--gradient-primary)] hover:brightness-110"
                 asChild
               >
-                <Link to="/auth">Sign In</Link>
+                <Link href="/auth">Sign In</Link>
               </Button>
-
             )}
 
             <Button
@@ -124,14 +121,14 @@ export function Header() {
                     size="sm"
                     className="w-fit gap-1.5"
                     onClick={() => {
-                      setCreateModalOpen(true);
-                      setMobileMenuOpen(false);
+                      setCreateModalOpen(true)
+                      setMobileMenuOpen(false)
                     }}
                   >
                     <Plus className="h-4 w-4" />
                     Create Prediction
                   </Button>
-                  <Button variant="ghost" size="sm" className="w-fit gap-2" onClick={handleSignOut}>
+                  <Button variant="ghost" size="sm" className="w-fit gap-2" onClick={signOut}>
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </Button>
@@ -142,20 +139,18 @@ export function Header() {
                   className="w-fit text-white btn-glow bg-[image:var(--gradient-primary)] hover:bg-[image:var(--gradient-primary)] hover:brightness-110"
                   asChild
                 >
-                  <Link to="/auth">Sign In</Link>
+                  <Link href="/auth">Sign In</Link>
                 </Button>
-
               )}
             </nav>
           </div>
         )}
       </div>
 
-      {/* Create Prediction Modal */}
       <CreateQuestionModal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
       />
     </header>
-  );
+  )
 }

@@ -1,4 +1,5 @@
-// PredictionCard.tsx
+'use client'
+
 import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { Question, QuestionOption } from "@/types/prediction";

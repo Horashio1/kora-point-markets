@@ -1,3 +1,5 @@
+'use client'
+
 import { useUserStats } from "@/hooks/useUserStats";
 import { Coins, Target, Trophy, TrendingDown } from "lucide-react";
 

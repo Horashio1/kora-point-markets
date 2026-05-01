@@ -94,7 +94,8 @@ export function usePlaceBet() {
 
       // Update question's total_votes (you might want to use a database trigger for this)
       // For now, we'll increment it
-      const { error: questionError } = await supabase.rpc('increment_question_votes', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: questionError } = await (supabase.rpc as any)('increment_question_votes', {
         question_id_param: data.question_id,
         points_param: data.points_wagered
       });
