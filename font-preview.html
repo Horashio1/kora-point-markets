@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Font Preview — Order Summary Label</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Barlow+Condensed:wght@700&family=Oswald:wght@600&family=Rajdhani:wght@700&family=Bebas+Neue&family=Montserrat:wght@700&family=DM+Sans:wght@700&family=Exo+2:wght@700&family=Chakra+Petch:wght@700&family=Russo+One&family=Orbitron:wght@700&family=Syne:wght@700&family=Plus+Jakarta+Sans:wght@700&family=Outfit:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0e14;
+      color: #e2e8f0;
+      font-family: sans-serif;
+      padding: 40px 24px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: #131520;
+      border: 1px solid #1e2235;
+      border-radius: 14px;
+      padding: 20px 22px;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: #2e3a5c; }
+
+    .card-header {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 4px;
+      font-family: sans-serif;
+    }
+
+    .buying-yes {
+      font-size: 22px;
+      font-weight: 700;
+      color: #60a5fa;
+      line-height: 1.1;
+    }
+
+    .buying-no {
+      font-size: 22px;
+      font-weight: 700;
+      color: #a78bfa;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    .meta {
+      margin-top: 10px;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: #334155;
+      text-transform: uppercase;
+    }
+
+    .badge-current {
+      display: inline-block;
+      background: #1e2235;
+      border: 1px solid #2e3a5c;
+      color: #60a5fa;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border-radius: 100px;
+      padding: 2px 8px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Order Summary · Font Preview — pick your favourite</h1>
+
+  <div class="grid">
+
+    <!-- 1. Space Grotesk (current) -->
+    <div class="card">
+      <div class="card-header">1. Space Grotesk — Current</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Space Grotesk', sans-serif;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Space Grotesk', sans-serif;">Buying NO</div>
+      <div class="badge-current">current</div>
+    </div>
+
+    <!-- 2. Bebas Neue -->
+    <div class="card">
+      <div class="card-header">2. Bebas Neue — Bold sports feel</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.06em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.06em;">Buying NO</div>
+      <div class="meta">font-family: 'Bebas Neue'</div>
+    </div>
+
+    <!-- 3. Oswald -->
+    <div class="card">
+      <div class="card-header">3. Oswald — Punchy, condensed</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Oswald', sans-serif; font-size: 22px; letter-spacing: 0.04em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Oswald', sans-serif; font-size: 22px; letter-spacing: 0.04em;">Buying NO</div>
+      <div class="meta">font-family: 'Oswald'</div>
+    </div>
+
+    <!-- 4. Orbitron -->
+    <div class="card">
+      <div class="card-header">4. Orbitron — Futuristic / tech</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Orbitron', sans-serif; font-size: 18px; letter-spacing: 0.04em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Orbitron', sans-serif; font-size: 18px; letter-spacing: 0.04em;">Buying NO</div>
+      <div class="meta">font-family: 'Orbitron'</div>
+    </div>
+
+    <!-- 5. Rajdhani -->
+    <div class="card">
+      <div class="card-header">5. Rajdhani — Sharp, angular</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Rajdhani', sans-serif; font-size: 24px; letter-spacing: 0.06em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Rajdhani', sans-serif; font-size: 24px; letter-spacing: 0.06em;">Buying NO</div>
+      <div class="meta">font-family: 'Rajdhani'</div>
+    </div>
+
+    <!-- 6. Chakra Petch -->
+    <div class="card">
+      <div class="card-header">6. Chakra Petch — Cyber / HUD</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Chakra Petch', sans-serif; font-size: 20px; letter-spacing: 0.04em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Chakra Petch', sans-serif; font-size: 20px; letter-spacing: 0.04em;">Buying NO</div>
+      <div class="meta">font-family: 'Chakra Petch'</div>
+    </div>
+
+    <!-- 7. Montserrat -->
+    <div class="card">
+      <div class="card-header">7. Montserrat — Clean, premium</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Montserrat', sans-serif; font-size: 22px; letter-spacing: 0.02em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Montserrat', sans-serif; font-size: 22px; letter-spacing: 0.02em;">Buying NO</div>
+      <div class="meta">font-family: 'Montserrat'</div>
+    </div>
+
+    <!-- 8. Exo 2 -->
+    <div class="card">
+      <div class="card-header">8. Exo 2 — Sci-fi, dynamic</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Exo 2', sans-serif; font-size: 22px; letter-spacing: 0.03em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Exo 2', sans-serif; font-size: 22px; letter-spacing: 0.03em;">Buying NO</div>
+      <div class="meta">font-family: 'Exo 2'</div>
+    </div>
+
+    <!-- 9. Barlow Condensed -->
+    <div class="card">
+      <div class="card-header">9. Barlow Condensed — Sporty, tight</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; letter-spacing: 0.05em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; letter-spacing: 0.05em;">Buying NO</div>
+      <div class="meta">font-family: 'Barlow Condensed'</div>
+    </div>
+
+    <!-- 10. Russo One -->
+    <div class="card">
+      <div class="card-header">10. Russo One — Heavy, impactful</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Russo One', sans-serif; font-size: 22px; letter-spacing: 0.02em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Russo One', sans-serif; font-size: 22px; letter-spacing: 0.02em;">Buying NO</div>
+      <div class="meta">font-family: 'Russo One'</div>
+    </div>
+
+    <!-- 11. Syne -->
+    <div class="card">
+      <div class="card-header">11. Syne — Avant-garde, editorial</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Syne', sans-serif; font-size: 22px; letter-spacing: 0.02em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Syne', sans-serif; font-size: 22px; letter-spacing: 0.02em;">Buying NO</div>
+      <div class="meta">font-family: 'Syne'</div>
+    </div>
+
+    <!-- 12. Outfit -->
+    <div class="card">
+      <div class="card-header">12. Outfit — Friendly, modern</div>
+      <div class="label">Order Summary</div>
+      <div class="buying-yes" style="font-family: 'Outfit', sans-serif; font-size: 22px; letter-spacing: 0.02em;">Buying YES</div>
+      <div class="buying-no" style="font-family: 'Outfit', sans-serif; font-size: 22px; letter-spacing: 0.02em;">Buying NO</div>
+      <div class="meta">font-family: 'Outfit'</div>
+    </div>
+
+  </div>
+</body>
+</html>

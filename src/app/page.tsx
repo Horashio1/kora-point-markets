@@ -14,6 +14,7 @@ import { useQuestions, useFeaturedQuestion } from '@/hooks/useQuestions'
 import { useAuth } from '@/hooks/useAuth'
 import { Question } from '@/types/prediction'
 import { TrendingUp, Loader2, Plus } from 'lucide-react'
+import { LogoIcon } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
 
 const LineGraphBackground = dynamic(
@@ -148,9 +149,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
-                <TrendingUp className="h-4 w-4 text-primary" />
-              </div>
+              <LogoIcon size={28} />
               <span className="font-display font-bold">Bet.lk</span>
             </div>
             <p className="text-sm text-muted-foreground">

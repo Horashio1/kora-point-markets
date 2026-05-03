@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)",
+      "Bash(curl -s http://localhost:3000/ -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/_next/static/chunks/app/layout.js)",
+      "Bash(node -e \"const r = require\\('./node_modules/react/package.json'\\); console.log\\('React:', r.version\\)\")",
+      "Bash(node -e \"const r = require\\('./node_modules/@react-three/fiber/package.json'\\); console.log\\('R3F:', r.version\\)\")",
+      "Bash(node -e \"const r = require\\('./node_modules/@react-three/drei/package.json'\\); console.log\\('Drei:', r.version\\)\")",
+      "Bash(node -e \"const r = require\\('./node_modules/next/dist/compiled/react/package.json'\\); console.log\\('Next compiled React:', r.version\\)\")",
+      "Bash(npm uninstall *)",
+      "Bash(git commit -m ' *)",
+      "WebFetch(domain:impeccable.style)",
+      "Bash(npx tsc *)"
     ]
   }
 }

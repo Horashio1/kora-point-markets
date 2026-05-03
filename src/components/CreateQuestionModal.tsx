@@ -1,21 +1,26 @@
 'use client'
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { useEffect, useMemo, useState } from "react";
+import { useFieldArray, useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { addDays, format } from "date-fns";
-import { CalendarIcon, HelpCircle, Minus, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { addDays, addHours, endOfDay, format } from "date-fns";
+import { CalendarIcon, Clock, Minus, Plus, ShieldCheck, Zap } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -33,38 +38,43 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCategories } from "@/hooks/useCategories";
 import { useCreateQuestion } from "@/hooks/useCreateQuestion";
 import { cn } from "@/lib/utils";
+import { URGENT_HOURS } from "@/lib/config";
+
+/* ─────────────────────── responsive hook ───────────────────────── */
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 640px)");
+    setIsDesktop(media.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    media.addEventListener("change", handler);
+    return () => media.removeEventListener("change", handler);
+  }, []);
+  return isDesktop;
+}
+
+/* ─────────────────────────── schema ────────────────────────────── */
 
 const formSchema = z.object({
   title: z.string()
     .trim()
     .min(10, "Question must be at least 10 characters")
-    .max(200, "Question must be less than 200 characters"),
-  description: z.string()
-    .trim()
-    .max(1000, "Description must be less than 1000 characters")
-    .optional(),
+    .max(200, "Must be under 200 characters"),
+  description: z.string().trim().max(1000, "Keep it under 1000 characters").optional(),
   category_id: z.string().optional(),
-  ends_at: z.date({
-    required_error: "Please select an end date",
-  }).refine((date) => date > new Date(), {
-    message: "End date must be in the future",
-  }),
+  ends_at: z.date({ required_error: "Pick a closing time" }).refine(
+    (d) => d > new Date(),
+    { message: "Must be in the future" }
+  ),
+  ends_time: z.string().default("23:59"),
   question_type: z.enum(["binary", "multi"]),
   yes_percentage: z.number().min(1).max(99),
   options: z.array(z.object({
@@ -73,27 +83,393 @@ const formSchema = z.object({
   })).optional(),
 }).superRefine((data, ctx) => {
   if (data.question_type === "multi") {
-    const validOptions = data.options?.filter((opt) => opt.name && opt.name.trim() !== "") || [];
-    if (validOptions.length < 2) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "At least 2 options are required for multiple choice",
-        path: ["options"],
-      });
+    const valid = data.options?.filter((o) => o.name?.trim() !== "") ?? [];
+    if (valid.length < 2) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Add at least 2 options", path: ["options"] });
     }
   }
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-interface CreateQuestionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+/* ─────────────────────── close presets ─────────────────────────── */
+
+type ClosePreset = "3h" | "6h" | "eod" | "custom";
+
+const CLOSE_PRESETS: { id: ClosePreset; label: string }[] = [
+  { id: "3h",     label: "3 hrs"      },
+  { id: "6h",     label: "6 hrs"      },
+  { id: "eod",    label: "End of day" },
+  { id: "custom", label: "Custom"     },
+];
+
+/* ─────────── inner fields component (no Form/form wrapper) ─────── */
+
+function BetFields({
+  form,
+  closePreset,
+  applyClosePreset,
+  isPickedTimeUrgent,
+  categories,
+}: {
+  form: UseFormReturn<FormData>;
+  closePreset: ClosePreset;
+  applyClosePreset: (p: ClosePreset) => void;
+  isPickedTimeUrgent: boolean;
+  categories: { id: number; name: string; icon: string }[];
+}) {
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: "options" });
+  const questionType = form.watch("question_type");
+  const titleValue   = form.watch("title") ?? "";
+
+  return (
+    <div className="space-y-5">
+
+      {/* 1. The question */}
+      <FormField
+        control={form.control}
+        name="title"
+        render={({ field }) => (
+          <FormItem>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-2">
+              What&apos;s the question?
+            </div>
+            <FormControl>
+              <div className="relative">
+                <Textarea
+                  placeholder={
+                    questionType === "binary"
+                      ? "Will this happen before the end of the year?"
+                      : "Who will win the match this weekend?"
+                  }
+                  rows={2}
+                  {...field}
+                  className="resize-none border-border/70 bg-background/50 py-3 pr-14 text-[15px] leading-snug text-foreground placeholder:text-muted-foreground/30 transition-all hover:border-border focus:border-[hsl(var(--neon-blue)/0.55)] focus:ring-0 focus:shadow-[0_0_0_3px_hsl(var(--neon-blue)/0.08)]"
+                />
+                <span className={cn(
+                  "pointer-events-none absolute bottom-2.5 right-3 text-[10px] tabular-nums",
+                  titleValue.length > 180 ? "text-destructive" : "text-muted-foreground/30"
+                )}>
+                  {titleValue.length}/200
+                </span>
+              </div>
+            </FormControl>
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+
+      {/* 2. Answer type */}
+      <FormField
+        control={form.control}
+        name="question_type"
+        render={({ field }) => (
+          <FormItem>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-2">
+              How do people answer?
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: "binary", label: "YES / NO",   sub: "It happens or it doesn't" },
+                { value: "multi",  label: "Pick one",   sub: "Choose from a list"        },
+              ].map(({ value, label, sub }) => {
+                const active = field.value === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => field.onChange(value)}
+                    className={cn(
+                      "relative rounded-xl border px-4 py-4 text-left transition-all duration-200 outline-none",
+                      active
+                        ? "border-[hsl(var(--neon-blue)/0.5)] bg-[hsl(var(--neon-blue)/0.1)]"
+                        : "border-border bg-background/40 hover:border-[hsl(var(--neon-blue)/0.3)] hover:bg-[hsl(var(--neon-blue)/0.05)]"
+                    )}
+                    style={active ? {
+                      boxShadow: "0 0 36px -12px hsl(var(--neon-blue)/0.5), inset 0 0 0 1px hsl(var(--neon-blue)/0.12)"
+                    } : undefined}
+                  >
+                    <div className={cn("font-display text-base font-bold tracking-tight",
+                      active ? "text-[hsl(var(--neon-blue))]" : "text-foreground")}>
+                      {label}
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground/60">{sub}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </FormItem>
+        )}
+      />
+
+      {/* 3a. Options (multi only) */}
+      {questionType === "multi" && (
+        <div className="rounded-xl border border-border bg-background/40 p-4 space-y-2">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-3">
+            The options
+          </div>
+          {fields.map((fieldItem, index) => (
+            <div key={fieldItem.id} className="flex items-center gap-2">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-border/50 font-mono text-[10px] font-bold text-muted-foreground/50">
+                {index + 1}
+              </span>
+              <Input
+                placeholder={`Option ${index + 1}`}
+                {...form.register(`options.${index}.name`)}
+                className="h-9 border-border/60 bg-background/60 text-sm text-foreground placeholder:text-muted-foreground/30 focus-visible:ring-[hsl(var(--neon-blue)/0.3)] focus-visible:border-[hsl(var(--neon-blue)/0.5)]"
+              />
+              {fields.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground/30 transition-colors hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          ))}
+          {form.formState.errors.options?.message && (
+            <p className="text-xs text-destructive pt-1">{String(form.formState.errors.options.message)}</p>
+          )}
+          {fields.length < 10 && (
+            <button
+              type="button"
+              onClick={() => append({ name: "", percentage: 0 })}
+              className="mt-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground/45 transition-colors hover:text-[hsl(var(--neon-blue))]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add option
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 3b. Starting odds (binary only) */}
+      {questionType === "binary" && (
+        <FormField
+          control={form.control}
+          name="yes_percentage"
+          render={({ field }) => (
+            <FormItem>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-2">
+                Where do you think this lands?
+              </div>
+              <FormControl>
+                <div className="space-y-3">
+                  <div className="relative h-14 overflow-hidden rounded-xl">
+                    <div
+                      className="absolute inset-y-0 left-0 flex flex-col items-center justify-center transition-all duration-300"
+                      style={{
+                        width: `${field.value}%`,
+                        background: "linear-gradient(135deg, hsl(var(--neon-blue)/0.85), hsl(var(--neon-indigo)/0.75))",
+                      }}
+                    >
+                      {field.value > 13 && (
+                        <>
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-white/60">YES</span>
+                          <span className="font-display text-lg font-bold leading-tight text-white">{field.value}%</span>
+                        </>
+                      )}
+                    </div>
+                    <div
+                      className="absolute inset-y-0 right-0 flex flex-col items-center justify-center transition-all duration-300"
+                      style={{
+                        width: `${100 - field.value}%`,
+                        background: "linear-gradient(135deg, hsl(var(--neon-indigo)/0.65), hsl(var(--neon-purple)/0.85))",
+                      }}
+                    >
+                      {(100 - field.value) > 13 && (
+                        <>
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-white/60">NO</span>
+                          <span className="font-display text-lg font-bold leading-tight text-white">{100 - field.value}%</span>
+                        </>
+                      )}
+                    </div>
+                    <div
+                      className="pointer-events-none absolute inset-y-0 z-10 w-px bg-black/30 transition-all duration-300"
+                      style={{ left: `${field.value}%` }}
+                    />
+                  </div>
+                  <Slider
+                    min={1} max={99} step={1}
+                    value={[field.value]}
+                    onValueChange={(v) => field.onChange(v[0])}
+                    className="py-0.5"
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground/30">
+                    <span>Very unlikely</span>
+                    <span>Very likely</span>
+                  </div>
+                </div>
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* 4. When does it close? */}
+      <FormField
+        control={form.control}
+        name="ends_at"
+        render={({ field }) => (
+          <FormItem>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-2">
+              When does betting close?
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {CLOSE_PRESETS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => applyClosePreset(id)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-150 outline-none",
+                    closePreset === id
+                      ? "border-foreground bg-foreground text-background"
+                      : "border-border bg-transparent text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {closePreset === "custom" && (
+              <div className="flex gap-2 mt-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "min-w-0 flex-1 border-border/70 bg-background/50 pl-3 text-left font-normal transition-all hover:border-border",
+                          !field.value ? "text-muted-foreground/35" : "text-foreground"
+                        )}
+                      >
+                        {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick a date</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 flex-shrink-0 opacity-35" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto border-border bg-card p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <input
+                  type="time"
+                  {...form.register("ends_time")}
+                  className="w-[88px] flex-shrink-0 rounded-md border border-border/70 bg-background/50 px-2 text-sm text-foreground transition-all hover:border-border focus:border-[hsl(var(--neon-blue)/0.55)] focus:outline-none [color-scheme:dark]"
+                />
+              </div>
+            )}
+
+            {closePreset !== "custom" && field.value && (
+              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+                <Clock className="h-3 w-3 flex-shrink-0" />
+                <span>Closes {format(field.value, "MMM d 'at' h:mm a")}</span>
+              </div>
+            )}
+
+            {isPickedTimeUrgent && (
+              <div className="mt-1 flex items-center gap-1.5 text-[11px] text-amber-400/80">
+                <Zap className="h-3 w-3 flex-shrink-0" />
+                <span>Shows as &quot;closing soon&quot; to everyone</span>
+              </div>
+            )}
+
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+
+      {/* 5. Category (optional) */}
+      <FormField
+        control={form.control}
+        name="category_id"
+        render={({ field }) => (
+          <FormItem>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-2">
+              Category{" "}
+              <span className="normal-case font-normal text-muted-foreground/35">(optional)</span>
+            </div>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger className="border-border/70 bg-background/50 text-foreground transition-all hover:border-border data-[placeholder]:text-muted-foreground/35">
+                  <SelectValue placeholder="Pick a category" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="border-border bg-card">
+                {categories.map((category) => (
+                  <SelectItem
+                    key={category.id}
+                    value={category.id.toString()}
+                    className="text-foreground focus:bg-accent"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{category.icon}</span>
+                      <span>{category.name}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormItem>
+        )}
+      />
+
+      {/* 6. Extra details (optional) */}
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-2">
+              More details{" "}
+              <span className="normal-case font-normal text-muted-foreground/35">(optional)</span>
+            </div>
+            <FormControl>
+              <Textarea
+                placeholder="What counts as a win? Link a source, explain edge cases, keep it clear."
+                rows={2}
+                className="resize-none border-border/70 bg-background/50 text-foreground placeholder:text-muted-foreground/30 transition-all hover:border-border focus:border-[hsl(var(--neon-blue)/0.55)] focus:ring-0"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+
+      {/* Review notice */}
+      <div className="flex items-start gap-3 rounded-xl border border-border/30 bg-background/10 px-4 py-3">
+        <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground/30" />
+        <p className="text-xs leading-relaxed text-muted-foreground/50">
+          Your bet is{" "}
+          <span className="font-semibold text-foreground/60">reviewed before going live</span>
+          {" "}— usually within minutes.
+        </p>
+      </div>
+
+    </div>
+  );
 }
 
-export function CreateQuestionModal({ isOpen, onClose }: CreateQuestionModalProps) {
+/* ─────────────────────────── main component ────────────────────── */
+
+export function CreateQuestionModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const isDesktop = useIsDesktop();
   const { data: categories = [] } = useCategories();
   const createQuestion = useCreateQuestion();
+  const [closePreset, setClosePreset] = useState<ClosePreset>("custom");
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -102,358 +478,155 @@ export function CreateQuestionModal({ isOpen, onClose }: CreateQuestionModalProp
       description: "",
       category_id: undefined,
       ends_at: addDays(new Date(), 7),
+      ends_time: "23:59",
       question_type: "binary",
       yes_percentage: 50,
-      options: [
-        { name: "", percentage: 50 },
-        { name: "", percentage: 50 },
-      ],
+      options: [{ name: "", percentage: 50 }, { name: "", percentage: 50 }],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "options",
-  });
+  const endsAtDate = form.watch("ends_at");
+  const endsTime   = form.watch("ends_time");
 
-  const questionType = form.watch("question_type");
-  const yesPercentage = form.watch("yes_percentage");
+  const applyClosePreset = (preset: ClosePreset) => {
+    setClosePreset(preset);
+    if (preset === "3h") {
+      const t = addHours(new Date(), 3);
+      form.setValue("ends_at", t);
+      form.setValue("ends_time", `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`);
+    } else if (preset === "6h") {
+      const t = addHours(new Date(), 6);
+      form.setValue("ends_at", t);
+      form.setValue("ends_time", `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`);
+    } else if (preset === "eod") {
+      form.setValue("ends_at", endOfDay(new Date()));
+      form.setValue("ends_time", "23:59");
+    }
+  };
+
+  const isPickedTimeUrgent = useMemo(() => {
+    if (!endsAtDate) return false;
+    const combined = new Date(endsAtDate);
+    const [h, m] = (endsTime || "23:59").split(":").map(Number);
+    combined.setHours(h, m, 0, 0);
+    return (combined.getTime() - Date.now()) / 3_600_000 <= URGENT_HOURS && combined > new Date();
+  }, [endsAtDate, endsTime]);
 
   const onSubmit = async (data: FormData) => {
-    const validOptions = data.question_type === "multi" && data.options
-      ? data.options.filter((opt) => opt.name && opt.name.trim() !== "")
-      : undefined;
+    const [h, m] = (data.ends_time || "23:59").split(":").map(Number);
+    const endsAt = new Date(data.ends_at);
+    endsAt.setHours(h, m, 0, 0);
+
+    let validOptions: { name: string; percentage: number }[] | undefined;
+    if (data.question_type === "multi" && data.options) {
+      const filtered = data.options.filter((o) => o.name?.trim() !== "");
+      const pct = Math.round(100 / filtered.length);
+      validOptions = filtered.map((o) => ({ name: o.name, percentage: pct }));
+    }
 
     await createQuestion.mutateAsync({
       title: data.title,
       description: data.description,
       category_id: data.category_id ? parseInt(data.category_id, 10) : null,
-      ends_at: data.ends_at.toISOString(),
+      ends_at: endsAt.toISOString(),
       yes_percentage: data.yes_percentage,
       question_type: data.question_type,
-      options: validOptions as { name: string; percentage: number }[] | undefined,
+      options: validOptions,
     });
 
     form.reset();
+    setClosePreset("custom");
     onClose();
   };
 
+  /* ── Shared: footer buttons ─────────────────────────────────────── */
+
+  const FooterButtons = ({ formId }: { formId: string }) => (
+    <div className="flex gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onClose}
+        className="h-11 flex-1 rounded-xl border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+      >
+        Cancel
+      </Button>
+      <button
+        type="submit"
+        form={formId}
+        disabled={createQuestion.isPending}
+        className={cn(
+          "h-11 flex-[2] rounded-xl text-sm font-semibold text-white transition-all duration-200",
+          "disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        )}
+        style={{
+          background: "linear-gradient(135deg, hsl(var(--neon-blue)), hsl(var(--neon-indigo)), hsl(var(--neon-purple)))",
+          boxShadow: "0 0 24px -8px hsl(var(--neon-blue)/0.5)",
+        }}
+      >
+        {createQuestion.isPending ? (
+          <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Posting...</>
+        ) : (
+          <>Post Bet <span className="opacity-60">→</span></>
+        )}
+      </button>
+    </div>
+  );
+
+  const fieldProps = { form, closePreset, applyClosePreset, isPickedTimeUrgent, categories };
+
+  /* ── Mobile: bottom sheet ───────────────────────────────────────── */
+  if (!isDesktop) {
+    return (
+      <Drawer open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+        <DrawerContent className="bg-card border-border flex flex-col max-h-[92dvh]">
+          <DrawerTitle className="sr-only">Post a Bet</DrawerTitle>
+          <DrawerDescription className="sr-only">Create a new prediction</DrawerDescription>
+
+          <div className="flex-shrink-0 border-b border-border px-5 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">New Bet</p>
+            <div className="font-display text-2xl font-bold text-foreground">Post a Bet</div>
+          </div>
+
+          <div className="overflow-y-auto flex-1 px-5 py-5">
+            <Form {...form}>
+              <form id="create-bet-mobile" onSubmit={form.handleSubmit(onSubmit)}>
+                <BetFields {...fieldProps} />
+              </form>
+            </Form>
+          </div>
+
+          <div className="flex-shrink-0 border-t border-border px-5 pb-8 pt-4">
+            <FooterButtons formId="create-bet-mobile" />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  /* ── Desktop: centered dialog ───────────────────────────────────── */
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto rounded-[28px] border border-slate-200 bg-white p-0 sm:max-w-[760px] shadow-[0_24px_80px_rgba(15,23,42,0.2)]">
-        <div className="border-b border-slate-200 bg-slate-50 px-6 pb-6 pt-6">
-          <DialogHeader className="space-y-3 text-left">
-            <DialogTitle className="flex items-center gap-3 text-2xl font-display font-bold">
-              <div className="rounded-xl border border-slate-200 bg-white p-2">
-                <Plus className="h-6 w-6 text-slate-900" />
-              </div>
-              Create Market
-            </DialogTitle>
-            <DialogDescription className="max-w-2xl text-sm text-slate-600">
-              Build a clean event contract proposal. Like a Kalshi ticket, this should be crisp, specific, and easy to resolve.
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="flex flex-col max-h-[92vh] gap-0 overflow-hidden rounded-2xl border border-border bg-card p-0 sm:max-w-[520px] shadow-[0_40px_100px_rgba(0,0,0,0.8),0_0_80px_-30px_hsl(var(--neon-blue)/0.15)]">
+        <DialogTitle className="sr-only">Post a Bet</DialogTitle>
+        <DialogDescription className="sr-only">Create a new prediction</DialogDescription>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                Precision
-              </div>
-              <p className="text-sm text-slate-600">
-                Phrase the market so the outcome can be judged without debate.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                Liquidity
-              </div>
-              <p className="text-sm text-slate-600">
-                Better markets are simple enough that lots of people want to take a side.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Review
-              </div>
-              <p className="text-sm text-slate-600">
-                Approved profiles review pending markets before they appear publicly.
-              </p>
-            </div>
-          </div>
+        <div className="flex-shrink-0 border-b border-border bg-accent px-6 py-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">New Bet</p>
+          <div className="font-display text-2xl font-bold text-foreground">Post a Bet</div>
+          <p className="mt-1 text-sm text-muted-foreground/60">Keep it clear — everyone should understand it instantly.</p>
         </div>
 
-        <div className="px-6 py-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <FormField
-                  control={form.control}
-                  name="question_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-slate-900">Market Type</FormLabel>
-                      <Tabs value={field.value} onValueChange={field.onChange} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-white p-1 border border-slate-200">
-                          <TabsTrigger value="binary" className="gap-2 rounded-xl data-[state=active]:bg-slate-900 data-[state=active]:text-white">
-                            <span className="text-success">Yes</span>/<span className="text-destructive">No</span>
-                          </TabsTrigger>
-                          <TabsTrigger value="multi" className="gap-2 rounded-xl data-[state=active]:bg-slate-900 data-[state=active]:text-white">
-                            Multiple Choice
-                          </TabsTrigger>
-                        </TabsList>
-                      </Tabs>
-                      <FormDescription className="text-slate-500">
-                        {field.value === "binary"
-                          ? "Use a single question with YES and NO contracts."
-                          : "Use a parent question with a set of candidate outcomes."}
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-5">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Question</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={questionType === "binary"
-                            ? "Will Bitcoin reach $100k by end of 2025?"
-                            : "What will be the top AI model this month?"}
-                          {...field}
-                          className="border-slate-300 bg-white py-6 text-lg text-slate-950 transition-all hover:border-slate-400 focus:border-slate-900 focus:ring-0"
-                        />
-                      </FormControl>
-                      <FormDescription className="text-slate-500">
-                        Example: "Will the Fed cut rates by September 2026?"
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description and Resolution Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Add context, trusted sources, what counts as a win, and any important edge cases..."
-                          className="min-h-[110px] resize-none border-slate-300 bg-white text-slate-950 transition-all hover:border-slate-400 focus:border-slate-900 focus:ring-0"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {questionType === "multi" && (
-                <div className="space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                  <div>
-                    <Label className="text-slate-900">Options</Label>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Keep options mutually exclusive and easy to scan.
-                    </p>
-                  </div>
-                  <div className="space-y-3">
-                    {fields.map((field, index) => (
-                      <div key={field.id} className="grid grid-cols-[minmax(0,1fr)_88px_auto] gap-2">
-                        <Input
-                          placeholder={`Option ${index + 1}`}
-                          {...form.register(`options.${index}.name`)}
-                          className="border-slate-300 bg-white transition-all hover:border-slate-400 focus:border-slate-900 focus:ring-0"
-                        />
-                        <Input
-                          type="number"
-                          placeholder="%"
-                          {...form.register(`options.${index}.percentage`, { valueAsNumber: true })}
-                          className="border-slate-300 bg-white transition-all hover:border-slate-400 focus:border-slate-900 focus:ring-0"
-                        />
-                        {fields.length > 2 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => remove(index)}
-                            className="text-slate-500 hover:text-destructive"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {form.formState.errors.options?.message ? (
-                    <p className="text-sm font-medium text-destructive">
-                      {String(form.formState.errors.options.message)}
-                    </p>
-                  ) : null}
-                  {fields.length < 10 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => append({ name: "", percentage: 0 })}
-                      className="gap-1 rounded-xl border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Option
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="category_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="border-slate-300 bg-white text-slate-950 transition-all hover:border-slate-400 focus:border-slate-900 focus:ring-0">
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
-                              <span className="flex items-center gap-2">
-                                <span>{category.icon}</span>
-                                <span>{category.name}</span>
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="ends_at"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>End Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full border-slate-300 bg-white pl-3 text-left font-normal transition-all hover:border-slate-400 focus:border-slate-900 focus:ring-0",
-                                !field.value && "text-slate-500",
-                                field.value && "text-slate-950"
-                              )}
-                            >
-                              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormDescription>
-                        Choose a closing date that gives the market enough time to be fun.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {questionType === "binary" && (
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                  <FormField
-                    control={form.control}
-                    name="yes_percentage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center gap-2">
-                          <FormLabel>Starting Odds</FormLabel>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <HelpCircle className="h-4 w-4 cursor-help text-muted-foreground" />
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-[250px]">
-                                <p>Set the opening crowd probability for "Yes". This shapes the first impression of the market.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                        <FormControl>
-                          <div className="space-y-4">
-                            <Slider
-                              min={1}
-                              max={99}
-                              step={1}
-                              value={[field.value]}
-                              onValueChange={(value) => field.onChange(value[0])}
-                              className="py-2"
-                            />
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Yes price</div>
-                                <div className="mt-1 font-display text-2xl font-bold text-emerald-600">{yesPercentage}¢</div>
-                              </div>
-                              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">No price</div>
-                                <div className="mt-1 font-display text-2xl font-bold text-rose-600">{100 - yesPercentage}¢</div>
-                              </div>
-                            </div>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                Every market now lands in <span className="font-semibold text-foreground">pending review</span> first. An approved profile can check it, approve it, and then it becomes visible to everyone as a live bet.
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  className="h-12 flex-1 rounded-2xl border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="h-12 flex-1 rounded-2xl bg-slate-900 text-white hover:bg-slate-800"
-                  disabled={createQuestion.isPending}
-                >
-                  {createQuestion.isPending ? "Submitting..." : "Submit Market"}
-                </Button>
-              </div>
+            <form id="create-bet-desktop" onSubmit={form.handleSubmit(onSubmit)}>
+              <BetFields {...fieldProps} />
             </form>
           </Form>
+        </div>
+
+        <div className="flex-shrink-0 border-t border-border px-6 pb-6 pt-4">
+          <FooterButtons formId="create-bet-desktop" />
         </div>
       </DialogContent>
     </Dialog>

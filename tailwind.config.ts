@@ -25,7 +25,7 @@ export default {
   				'Noto Color Emoji'
   			],
   			display: [
-  				'Space Grotesk',
+  				'Outfit',
   				'sans-serif'
   			],
   			serif: [

@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Coins, TrendingUp, Menu, LogOut, Plus } from 'lucide-react'
+import { Coins, Menu, LogOut, Plus } from 'lucide-react'
+import { LogoIcon } from '@/components/Logo'
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserStats } from '@/hooks/useUserStats'
@@ -22,12 +23,11 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
+
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
-              <TrendingUp className="h-5 w-5 text-primary" />
-            </div>
-            <span className="font-display text-xl font-bold">
+          <Link href="/" className="flex items-center gap-2.5">
+            <LogoIcon size={36} />
+            <span className="font-display text-xl font-bold tracking-tight">
               Bet<span className="text-primary">.lk</span>
             </span>
           </Link>
