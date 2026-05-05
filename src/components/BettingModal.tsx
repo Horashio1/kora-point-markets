@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/drawer";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import { AlertCircle, Zap } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 function useIsDesktop() {
@@ -156,7 +156,7 @@ export function BettingModal({
       >
         <div className={cn("font-display text-3xl font-bold tracking-tight",
           effectivePrediction === "yes" ? "text-[hsl(var(--neon-blue))]" : "text-foreground")}>YES</div>
-        <div className="mt-1 text-sm font-semibold text-muted-foreground">{yesOdds}% chance</div>
+        <div className="mt-1 text-xs font-semibold text-muted-foreground">{yesOdds}% chance</div>
         <div className="mt-0.5 text-xs text-muted-foreground/60">It happens</div>
       </button>
 
@@ -175,13 +175,60 @@ export function BettingModal({
       >
         <div className={cn("font-display text-3xl font-bold tracking-tight",
           effectivePrediction === "no" ? "text-[hsl(var(--neon-purple))]" : "text-foreground")}>NO</div>
-        <div className="mt-1 text-sm font-semibold text-muted-foreground">{noOdds}% chance</div>
+        <div className="mt-1 text-xs font-semibold text-muted-foreground">{noOdds}% chance</div>
         <div className="mt-0.5 text-xs text-muted-foreground/60">It doesn&apos;t</div>
       </button>
     </div>
   );
 
   // ── Shared: points picker ──────────────────────────────────────────────────
+
+  const sliderPos = maxBet > 1 ? (points - 1) / (maxBet - 1) : 0;
+
+  const sliderSection = (
+    <>
+      <Slider
+        value={[points]}
+        onValueChange={(v) => setPoints(v[0])}
+        max={maxBet} min={1} step={1}
+        className="py-1"
+        trackStyle={
+          effectivePrediction === "yes"
+            ? { background: "hsl(var(--neon-blue)/0.15)" }
+            : effectivePrediction === "no"
+            ? { background: "hsl(var(--neon-purple)/0.15)" }
+            : undefined
+        }
+        rangeStyle={
+          effectivePrediction === "yes"
+            ? { background: "linear-gradient(to right, hsl(var(--neon-blue)/0.45), hsl(var(--neon-indigo)/0.45))" }
+            : effectivePrediction === "no"
+            ? { background: "linear-gradient(to right, hsl(var(--neon-indigo)/0.45), hsl(var(--neon-purple)/0.45))" }
+            : undefined
+        }
+        thumbStyle={
+          effectivePrediction === "yes"
+            ? {
+                backgroundImage: "linear-gradient(to right, hsl(var(--neon-blue)), hsl(var(--neon-indigo)))",
+                backgroundSize: "300% 100%",
+                backgroundPosition: `${sliderPos * 100}% 0`,
+                border: "none",
+              }
+            : effectivePrediction === "no"
+            ? {
+                backgroundImage: "linear-gradient(to right, hsl(var(--neon-indigo)), hsl(var(--neon-purple)))",
+                backgroundSize: "300% 100%",
+                backgroundPosition: `${sliderPos * 100}% 0`,
+                border: "none",
+              }
+            : undefined
+        }
+      />
+      <div className="flex justify-between text-[11px] text-muted-foreground/50">
+        <span>1</span><span>{maxBet}</span>
+      </div>
+    </>
+  );
 
   const pointsPicker = (
     <div className="rounded-xl border border-border bg-background/40 p-4 space-y-3">
@@ -206,9 +253,32 @@ export function BettingModal({
           </button>
         ))}
       </div>
-      <Slider value={[points]} onValueChange={(v) => setPoints(v[0])} max={maxBet} min={1} step={1} className="py-1" />
-      <div className="flex justify-between text-[11px] text-muted-foreground/50">
-        <span>1</span><span>{maxBet}</span>
+      {sliderSection}
+    </div>
+  );
+
+  const pointsPickerMobile = (
+    <div className="rounded-xl border border-border bg-background/40 p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-base font-medium text-foreground">Points to bet</span>
+        <span className="font-display text-4xl font-bold text-foreground">{points}</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {quickAmounts.map((value) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setPoints(value)}
+            className={cn(
+              "rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-150 outline-none",
+              points === value
+                ? "border-foreground bg-foreground text-background"
+                : "border-border bg-transparent text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+            )}
+          >
+            {value === maxBet ? `Max ${value}` : value}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -219,7 +289,7 @@ export function BettingModal({
     <div className="flex gap-3">
       <Button
         variant="outline"
-        className="h-11 flex-1 rounded-xl border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+        className="h-14 flex-1 rounded-xl border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
         onClick={onClose}
       >
         Cancel
@@ -229,7 +299,7 @@ export function BettingModal({
         onClick={handlePlaceBet}
         disabled={!effectivePrediction || points > pointsRemaining || points > userStats.total_points || placeBet.isPending}
         className={cn(
-          "h-11 flex-[2] rounded-xl text-sm font-semibold text-white transition-all duration-200",
+          "h-14 flex-[2] rounded-xl text-base font-semibold text-white transition-all duration-200",
           "disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         )}
         style={effectivePrediction ? {
@@ -244,7 +314,7 @@ export function BettingModal({
         {placeBet.isPending ? (
           <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Placing...</>
         ) : (
-          <><Zap className="h-4 w-4" />Confirm {effectivePrediction ? effectivePrediction.toUpperCase() : "—"}</>
+          <>Confirm {effectivePrediction ? effectivePrediction.toUpperCase() : "—"}</>
         )}
       </button>
     </div>
@@ -264,7 +334,7 @@ export function BettingModal({
           <div className="px-5 pt-5 pb-4 flex-shrink-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 mb-1.5">Place a Bet</p>
             {question && (
-              <p className="text-sm leading-relaxed text-foreground line-clamp-2">{question.title}</p>
+              <p className="text-lg leading-snug text-foreground line-clamp-2 font-medium">{question.title}</p>
             )}
             {optionName && (
               <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[hsl(var(--neon-blue)/0.3)] bg-[hsl(var(--neon-blue)/0.1)] px-3 py-1 text-xs font-medium text-[hsl(var(--neon-blue))]">
@@ -282,17 +352,17 @@ export function BettingModal({
                 {predictionSelector}
 
                 {/* Points picker */}
-                {pointsPicker}
+                {pointsPickerMobile}
 
                 {/* Win indicator */}
                 {effectivePrediction && (
                   <div className="flex items-center justify-between rounded-xl border border-border bg-background/20 px-4 py-3">
-                    <span className="text-sm text-muted-foreground">If you&apos;re right</span>
+                    <span className="text-sm text-muted-foreground">Points if you&apos;re right</span>
                     <span
-                      className="font-display text-xl font-bold"
+                      className="font-display text-2xl font-bold"
                       style={{ color: effectivePrediction === "yes" ? "hsl(var(--neon-blue))" : "hsl(var(--neon-purple))" }}
                     >
-                      {potentialWin} pts
+                      {potentialWin}
                     </span>
                   </div>
                 )}
@@ -312,6 +382,10 @@ export function BettingModal({
 
           {/* Footer */}
           <div className="flex-shrink-0 border-t border-border px-5 pb-8 pt-4">
+            {/* Slider */}
+            <div className="mb-5 space-y-1">
+              {sliderSection}
+            </div>
             {/* Available points bar */}
             <div className="mb-3">
               <div className="flex justify-between text-[11px] text-muted-foreground/50 mb-1.5">

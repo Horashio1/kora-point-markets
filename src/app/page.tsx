@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { Header } from '@/components/Header'
@@ -10,10 +11,10 @@ import { FeaturedPrediction } from '@/components/FeaturedPrediction'
 import { BettingModal } from '@/components/BettingModal'
 import { StatsBar } from '@/components/StatsBar'
 import { CreateQuestionModal } from '@/components/CreateQuestionModal'
-import { useQuestions, useFeaturedQuestion } from '@/hooks/useQuestions'
+import { useQuestions } from '@/hooks/useQuestions'
 import { useAuth } from '@/hooks/useAuth'
 import { Question } from '@/types/prediction'
-import { TrendingUp, Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { LogoIcon } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
 
@@ -32,7 +33,18 @@ export default function HomePage() {
 
   const { user } = useAuth()
   const { data: questions = [], isLoading: questionsLoading } = useQuestions()
-  const { data: featuredQuestion } = useFeaturedQuestion()
+
+  const [featuredIdx, setFeaturedIdx] = useState(0)
+
+  useEffect(() => {
+    if (questions.length <= 1) return
+    const id = setInterval(() => {
+      setFeaturedIdx(i => (i + 1) % questions.length)
+    }, 6000)
+    return () => clearInterval(id)
+  }, [questions.length])
+
+  const currentFeatured = questions.length > 0 ? questions[featuredIdx % questions.length] : null
 
   const filteredQuestions = questions.filter((q) => {
     if (selectedCategory === null) return true
@@ -56,10 +68,6 @@ export default function HomePage() {
 
         <div className="container relative mx-auto px-4 z-10">
           <div className="mx-auto mb-8 max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm text-primary">
-              <TrendingUp className="h-4 w-4" />
-              <span>Sri Lanka's #1 Prediction Market</span>
-            </div>
             <h1 className="mb-4 font-display text-4xl font-bold leading-tight text-foreground md:text-5xl lg:text-6xl">
               Predict the Future,
               <br />
@@ -94,11 +102,20 @@ export default function HomePage() {
             <StatsBar />
           </div>
 
-          {featuredQuestion && (
-            <div className="mb-8 animate-fade-in">
-              <FeaturedPrediction question={featuredQuestion} onBet={handleBet} />
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {currentFeatured && (
+              <motion.div
+                key={currentFeatured.id}
+                className="mb-8"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.45, ease: "easeInOut" }}
+              >
+                <FeaturedPrediction question={currentFeatured} onBet={handleBet} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 

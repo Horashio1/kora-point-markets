@@ -171,7 +171,7 @@ function BetFields({
             <div className="grid grid-cols-2 gap-3">
               {[
                 { value: "binary", label: "YES / NO",   sub: "It happens or it doesn't" },
-                { value: "multi",  label: "Pick one",   sub: "Choose from a list"        },
+                { value: "multi",  label: "MULTIPLE",   sub: "Choose from a list"        },
               ].map(({ value, label, sub }) => {
                 const active = field.value === value;
                 return (
@@ -250,62 +250,75 @@ function BetFields({
         <FormField
           control={form.control}
           name="yes_percentage"
-          render={({ field }) => (
-            <FormItem>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-2">
-                Where do you think this lands?
-              </div>
-              <FormControl>
-                <div className="space-y-3">
-                  <div className="relative h-14 overflow-hidden rounded-xl">
-                    <div
-                      className="absolute inset-y-0 left-0 flex flex-col items-center justify-center transition-all duration-300"
-                      style={{
-                        width: `${field.value}%`,
-                        background: "linear-gradient(135deg, hsl(var(--neon-blue)/0.85), hsl(var(--neon-indigo)/0.75))",
-                      }}
-                    >
-                      {field.value > 13 && (
-                        <>
-                          <span className="text-[9px] font-semibold uppercase tracking-wider text-white/60">YES</span>
-                          <span className="font-display text-lg font-bold leading-tight text-white">{field.value}%</span>
-                        </>
-                      )}
-                    </div>
-                    <div
-                      className="absolute inset-y-0 right-0 flex flex-col items-center justify-center transition-all duration-300"
-                      style={{
-                        width: `${100 - field.value}%`,
-                        background: "linear-gradient(135deg, hsl(var(--neon-indigo)/0.65), hsl(var(--neon-purple)/0.85))",
-                      }}
-                    >
-                      {(100 - field.value) > 13 && (
-                        <>
-                          <span className="text-[9px] font-semibold uppercase tracking-wider text-white/60">NO</span>
-                          <span className="font-display text-lg font-bold leading-tight text-white">{100 - field.value}%</span>
-                        </>
-                      )}
-                    </div>
-                    <div
-                      className="pointer-events-none absolute inset-y-0 z-10 w-px bg-black/30 transition-all duration-300"
-                      style={{ left: `${field.value}%` }}
-                    />
-                  </div>
-                  <Slider
-                    min={1} max={99} step={1}
-                    value={[field.value]}
-                    onValueChange={(v) => field.onChange(v[0])}
-                    className="py-0.5"
-                  />
-                  <div className="flex justify-between text-[10px] text-muted-foreground/30">
-                    <span>Very unlikely</span>
-                    <span>Very likely</span>
-                  </div>
+          render={({ field }) => {
+            const pos = (field.value - 1) / 98;
+            return (
+              <FormItem>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/55 mb-2">
+                  Where do you think this lands?
                 </div>
-              </FormControl>
-              <FormMessage className="text-xs" />
-            </FormItem>
-          )}
+                <FormControl>
+                  <div className="space-y-3">
+                    <div className="relative h-14 overflow-hidden rounded-xl">
+                      <div
+                        className="absolute inset-y-0 left-0 flex flex-col items-center justify-center transition-all duration-300"
+                        style={{
+                          width: `${field.value}%`,
+                          background: "linear-gradient(135deg, hsl(var(--neon-blue)/0.42), hsl(var(--neon-indigo)/0.36))",
+                        }}
+                      >
+                        {field.value > 13 && (
+                          <>
+                            <span className="text-[9px] font-semibold uppercase tracking-wider text-white/60">YES</span>
+                            <span className="font-display text-lg font-bold leading-tight text-white">{field.value}%</span>
+                          </>
+                        )}
+                      </div>
+                      <div
+                        className="absolute inset-y-0 right-0 flex flex-col items-center justify-center transition-all duration-300"
+                        style={{
+                          width: `${100 - field.value}%`,
+                          background: "linear-gradient(135deg, hsl(var(--neon-indigo)/0.30), hsl(var(--neon-purple)/0.42))",
+                        }}
+                      >
+                        {(100 - field.value) > 13 && (
+                          <>
+                            <span className="text-[9px] font-semibold uppercase tracking-wider text-white/60">NO</span>
+                            <span className="font-display text-lg font-bold leading-tight text-white">{100 - field.value}%</span>
+                          </>
+                        )}
+                      </div>
+                      <div
+                        className="pointer-events-none absolute inset-y-0 z-10 w-px bg-black/30 transition-all duration-300"
+                        style={{ left: `${field.value}%` }}
+                      />
+                    </div>
+                    <Slider
+                      min={1} max={99} step={1}
+                      value={[field.value]}
+                      onValueChange={(v) => field.onChange(v[0])}
+                      className="py-0.5"
+                      trackStyle={{
+                        background: "linear-gradient(to right, hsl(var(--neon-purple)/0.25), hsl(var(--neon-indigo)/0.25), hsl(var(--neon-blue)/0.25))",
+                      }}
+                      rangeStyle={{ background: "transparent" }}
+                      thumbStyle={{
+                        backgroundImage: "linear-gradient(to right, hsl(var(--neon-purple)), hsl(var(--neon-indigo)), hsl(var(--neon-blue)))",
+                        backgroundSize: "300% 100%",
+                        backgroundPosition: `${pos * 100}% 0`,
+                        border: "none",
+                      }}
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground/30">
+                      <span>Very unlikely</span>
+                      <span>Very likely</span>
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            );
+          }}
         />
       )}
 
@@ -470,6 +483,7 @@ export function CreateQuestionModal({ isOpen, onClose }: { isOpen: boolean; onCl
   const { data: categories = [] } = useCategories();
   const createQuestion = useCreateQuestion();
   const [closePreset, setClosePreset] = useState<ClosePreset>("custom");
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -485,8 +499,14 @@ export function CreateQuestionModal({ isOpen, onClose }: { isOpen: boolean; onCl
     },
   });
 
-  const endsAtDate = form.watch("ends_at");
-  const endsTime   = form.watch("ends_time");
+  const endsAtDate  = form.watch("ends_at");
+  const endsTime    = form.watch("ends_time");
+  const titleValue  = form.watch("title") ?? "";
+  const hasTitleTyped = titleValue.trim().length > 0;
+
+  useEffect(() => {
+    if (!isOpen) setHasScrolledToBottom(false);
+  }, [isOpen]);
 
   const applyClosePreset = (preset: ClosePreset) => {
     setClosePreset(preset);
@@ -541,22 +561,22 @@ export function CreateQuestionModal({ isOpen, onClose }: { isOpen: boolean; onCl
 
   /* ── Shared: footer buttons ─────────────────────────────────────── */
 
-  const FooterButtons = ({ formId }: { formId: string }) => (
+  const FooterButtons = ({ formId, extraDisabled }: { formId: string; extraDisabled?: boolean }) => (
     <div className="flex gap-3">
       <Button
         type="button"
         variant="outline"
         onClick={onClose}
-        className="h-11 flex-1 rounded-xl border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+        className="h-14 flex-1 rounded-xl border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
       >
         Cancel
       </Button>
       <button
         type="submit"
         form={formId}
-        disabled={createQuestion.isPending}
+        disabled={createQuestion.isPending || (extraDisabled ?? false)}
         className={cn(
-          "h-11 flex-[2] rounded-xl text-sm font-semibold text-white transition-all duration-200",
+          "h-14 flex-[2] rounded-xl text-base font-semibold text-white transition-all duration-200",
           "disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         )}
         style={{
@@ -567,7 +587,7 @@ export function CreateQuestionModal({ isOpen, onClose }: { isOpen: boolean; onCl
         {createQuestion.isPending ? (
           <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Posting...</>
         ) : (
-          <>Post Bet <span className="opacity-60">→</span></>
+          <>Post Bet</>
         )}
       </button>
     </div>
@@ -584,11 +604,19 @@ export function CreateQuestionModal({ isOpen, onClose }: { isOpen: boolean; onCl
           <DrawerDescription className="sr-only">Create a new prediction</DrawerDescription>
 
           <div className="flex-shrink-0 border-b border-border px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">New Bet</p>
             <div className="font-display text-2xl font-bold text-foreground">Post a Bet</div>
           </div>
 
-          <div className="overflow-y-auto flex-1 px-5 py-5">
+          <div
+            className="overflow-y-auto flex-1 px-5 py-5"
+            onScroll={(e) => {
+              if (hasScrolledToBottom) return;
+              const el = e.currentTarget;
+              if (el.scrollHeight - el.scrollTop <= el.clientHeight + 60) {
+                setHasScrolledToBottom(true);
+              }
+            }}
+          >
             <Form {...form}>
               <form id="create-bet-mobile" onSubmit={form.handleSubmit(onSubmit)}>
                 <BetFields {...fieldProps} />
@@ -597,7 +625,7 @@ export function CreateQuestionModal({ isOpen, onClose }: { isOpen: boolean; onCl
           </div>
 
           <div className="flex-shrink-0 border-t border-border px-5 pb-8 pt-4">
-            <FooterButtons formId="create-bet-mobile" />
+            <FooterButtons formId="create-bet-mobile" extraDisabled={!hasTitleTyped || !hasScrolledToBottom} />
           </div>
         </DrawerContent>
       </Drawer>
